@@ -22,6 +22,8 @@ public:
 public slots:
 	void eventSelectionChanged(const QItemSelection &index, const QItemSelection &old);
 	void changeLastSelected(const QModelIndex &index, const QModelIndex &old);
+	void openHexWindow(const QModelIndex &index);
+
 	void xorPatternChanged(const QString &text);
 
 	void exportCurrentView();

@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     qhexedit.cpp \
     qhexedit_p.cpp \
     xbytearray.cpp \
-    commands.cpp
+    commands.cpp \
+    hexwindow.cpp
 
 HEADERS  += nandseewindow.h \
     nandview.h \
@@ -30,6 +31,8 @@ HEADERS  += nandseewindow.h \
     qhexedit.h \
     qhexedit_p.h \
     xbytearray.h \
-    commands.h
+    commands.h \
+    hexwindow.h
 
-FORMS    += nandseewindow.ui
+FORMS    += nandseewindow.ui \
+    hexwindow.ui

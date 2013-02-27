@@ -7,6 +7,7 @@
 
 #include "nandseewindow.h"
 #include "eventitemmodel.h"
+#include "hexwindow.h"
 #include "ui_nandseewindow.h"
 
 NandSeeWindow::NandSeeWindow(QWidget *parent) :
@@ -39,6 +40,9 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 			this, SLOT(eventSelectionChanged(QItemSelection, QItemSelection)));
 	connect(_eventItemSelections, SIGNAL(currentChanged(QModelIndex,QModelIndex)),
 			this, SLOT(changeLastSelected(QModelIndex,QModelIndex)));
+
+	connect(ui->eventList, SIGNAL(doubleClicked(QModelIndex)),
+			this, SLOT(openHexWindow(QModelIndex)));
 
 	connect(ui->xorPattern, SIGNAL(textChanged(QString)),
 			this, SLOT(xorPatternChanged(QString)));
@@ -230,4 +234,15 @@ void NandSeeWindow::exportCurrentView()
 	saveFile.close();
 
 	return;
+}
+
+void NandSeeWindow::openHexWindow(const QModelIndex &index)
+{
+	Event e = _eventItemModel->eventAt(index.row());
+	HexWindow *newWindow;
+	QString newWindowTitle = QString("Showing %1 @ %2").arg(e.eventTypeStr()).arg(QString::number(index.row()));
+	newWindow = new HexWindow(this);
+	newWindow->setData(e.data());
+	newWindow->setWindowTitle(newWindowTitle);
+	newWindow->show();
 }
