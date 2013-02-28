@@ -44,6 +44,11 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 	connect(ui->eventList, SIGNAL(doubleClicked(QModelIndex)),
 			this, SLOT(openHexWindow(QModelIndex)));
 
+    connect(ui->ignoreEventsAction, SIGNAL(triggered()),
+            this, SLOT(ignoreEvents()));
+    connect(ui->unignoreEventsAction, SIGNAL(triggered()),
+            this, SLOT(unignoreEvents()));
+
 	connect(ui->xorPattern, SIGNAL(textChanged(QString)),
 			this, SLOT(xorPatternChanged(QString)));
 
@@ -160,6 +165,7 @@ void NandSeeWindow::changeLastSelected(const QModelIndex &index, const QModelInd
 	Q_UNUSED(old);
 	mostRecent = index;
 	updateEventDetails();
+    ui->ignoreEventsAction->setEnabled(true);
 }
 
 void NandSeeWindow::xorPatternChanged(const QString &text)
@@ -255,4 +261,18 @@ void NandSeeWindow::openHexWindow(const QModelIndex &index)
 	newWindow->setData(e.data());
 	newWindow->setWindowTitle(newWindowTitle);
 	newWindow->show();
+}
+
+void NandSeeWindow::ignoreEvents()
+{
+    _eventItemModel->ignoreEventsOfType(_eventItemModel->eventAt(mostRecent.row()).eventType());
+    ui->eventList->reset();
+    ui->unignoreEventsAction->setEnabled(true);
+}
+
+void NandSeeWindow::unignoreEvents()
+{
+    _eventItemModel->resetIgnoredEvents();
+    ui->eventList->reset();
+    ui->ignoreEventsAction->setEnabled(false);
 }

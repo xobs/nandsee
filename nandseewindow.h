@@ -29,6 +29,9 @@ public slots:
 	void exportCurrentView();
 	void exportCurrentPage();
 
+    void ignoreEvents();
+    void unignoreEvents();
+
 private:
 	Ui::NandSeeWindow *ui;
 	EventItemModel *_eventItemModel;

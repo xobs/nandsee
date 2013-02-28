@@ -111,3 +111,13 @@ const Event &EventItemModel::eventAt(int index)
 {
 	return _events.eventAt(index);
 }
+
+void EventItemModel::ignoreEventsOfType(int type)
+{
+    _events.ignoreEventsOfType(type);
+}
+
+void EventItemModel::resetIgnoredEvents()
+{
+    _events.resetIgnoredEvents();
+}

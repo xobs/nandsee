@@ -14,9 +14,12 @@ public:
     int load(QIODevice &source);
 	const Event &eventAt(int offset) const;
 	int count() const;
+    int ignoreEventsOfType(int type);
+    int resetIgnoredEvents();
 
 private:
     QList<Event> _events;
+    QList<Event> _currentEvents;
     QList<uint32_t> _offsets;
 
 signals:

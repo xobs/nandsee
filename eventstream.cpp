@@ -63,15 +63,34 @@ int EventStream::load(QIODevice &source)
         _events.append(e);
     }
 
+    _currentEvents = _events;
+
     return 0;
 }
 
 const Event &EventStream::eventAt(int offset) const
 {
-    return _events.at(offset);
+    return _currentEvents.at(offset);
 }
 
 int EventStream::count() const
 {
-    return _offsets.count();
+    return _currentEvents.count();
+}
+
+int EventStream::ignoreEventsOfType(int type)
+{
+    QList<Event> tempList;
+    int i;
+    for (i=0; i<_currentEvents.count(); i++)
+        if (_currentEvents.at(i).eventType() != type)
+            tempList.append(_currentEvents.at(i));
+    _currentEvents = tempList;
+    return 0;
+}
+
+int EventStream::resetIgnoredEvents()
+{
+    _currentEvents = _events;
+    return 0;
 }

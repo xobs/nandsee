@@ -52,10 +52,10 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
-   <addaction name="actionAction"/>
+   <addaction name="ignoreEventsAction"/>
+   <addaction name="unignoreEventsAction"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="eventListDock">
@@ -276,9 +276,26 @@
     <string>Utilities</string>
    </property>
   </action>
-  <action name="actionAction">
+  <action name="ignoreEventsAction">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>Action!</string>
+    <string>Ignore </string>
+   </property>
+   <property name="toolTip">
+    <string>Ignore packets of this type</string>
+   </property>
+  </action>
+  <action name="unignoreEventsAction">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reset Ignore</string>
+   </property>
+   <property name="toolTip">
+    <string>Reset all ignored packets</string>
    </property>
   </action>
  </widget>

@@ -18,8 +18,12 @@ public:
 
 	const Event &eventAt(int index);
 
+    void ignoreEventsOfType(int type);
+    void resetIgnoredEvents();
+
 private:
 	EventStream _events;
+    EventStream _currentEvents;
 
 signals:
 	
