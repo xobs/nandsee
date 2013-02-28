@@ -38,6 +38,7 @@ int TapboardProcessor::processRawFile(QString &rawFileName)
     progressWindow = new QProgressDialog(QString::fromUtf8("Joining events…"), "Cancel", 0, 4);
     progressWindow->setMinimumDuration(0);
     progressWindow->setValue(1);
+    progressWindow->setWindowTitle("Importing trace file");
 
     TapboardProcessorPrivate *tpp = new TapboardProcessorPrivate;
     backgroundThread = new QThread(this);
@@ -61,6 +62,7 @@ int TapboardProcessor::processRawFile(QString &rawFileName)
     tpp->setTargetFilename(fileName);
 
     backgroundThread->start();
+    progressWindow->setLabelText(QString::fromUtf8("Joining events…"));
     progressWindow->setValue(0);
     while (backgroundThread->isRunning())
         qApp->processEvents();
