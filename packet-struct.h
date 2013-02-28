@@ -4,6 +4,13 @@
 
 #include <stdint.h>
 
+#ifdef WINVER
+#pragma pack(1)
+#define MY_PACK __attribute__((__packed__, __aligned__(1)))
+#else
+#define MY_PACK __attribute__((__packed__))
+#endif
+
 enum subsystem_ids {
 	SUBSYS_NONE = 0,
 	SUBSYS_SD = 1,
@@ -57,7 +64,7 @@ struct pkt_header {
 	uint32_t sec;
 	uint32_t nsec;
 	uint16_t size;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 
@@ -66,62 +73,62 @@ struct pkt_error {
 	uint8_t code;
 	uint16_t arg;
 	uint8_t message[512];
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_nand_cycle {
 	uint8_t data;
 	uint8_t control;
 	uint16_t unknown;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_sd_data {
 	uint8_t data[512];
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_sd_cmd_arg {
 	uint8_t reg;
 	uint8_t val;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_sd_response {
 	uint8_t byte;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_sd_cid {
 	uint8_t cid[16];
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_sd_csd {
 	uint8_t csd[16];
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_buffer_offset {
 	uint8_t number;
 	uint32_t offset;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_buffer_contents {
 	uint8_t number;
 	uint8_t contents[512];
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_command {
 	uint8_t cmd[2];
 	uint32_t arg;
 	uint8_t start_stop;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_reset {
 	uint8_t version;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_buffer_drain {
 	uint8_t start_stop;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt_hello {
 	uint8_t version;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 union pkt_data {
@@ -138,12 +145,12 @@ union pkt_data {
     struct pkt_reset reset;
 	struct pkt_buffer_drain buffer_drain;
 	struct pkt_hello hello;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct pkt {
 	struct pkt_header header;
 	union pkt_data data;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 #endif // __PACKET_H__

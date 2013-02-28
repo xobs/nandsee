@@ -1,14 +1,21 @@
 #ifndef __EVENT_STRUCT_H_
 #define __EVENT_STRUCT_H_
 
+#include <stdint.h>
+
 #define EVENT_MAGIC_1 0x61728394
 #define EVENT_MAGIC_2 0x74931723
 
-#include <stdint.h>
+#ifdef WINVER
+#pragma pack(1)
+#define MY_PACK __attribute__((__packed__, __aligned__(1)))
+#else
+#define MY_PACK __attribute__((__packed__))
+#endif
+
 struct state;
 struct pkt;
 
-#pragma pack(1)
 
 enum evt_type {
     EVT_HELLO,
@@ -39,7 +46,7 @@ struct evt_header {
     uint32_t sec_start, nsec_start;
     uint32_t sec_end, nsec_end;
     uint32_t size;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 
@@ -52,20 +59,20 @@ struct evt_sd_cmd {
     uint32_t num_results;
     uint8_t  result[1024]; // If it's CMD17, contains a sector
     uint8_t  reserved;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 // When the FPGA buffer is drained
 struct evt_buffer_drain {
     struct evt_header hdr;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 // When the FPGA is reset.
 struct evt_reset {
     struct evt_header hdr;
     uint8_t version;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 // A network command
@@ -73,7 +80,7 @@ struct evt_net_cmd {
     struct evt_header hdr;
     uint8_t  cmd[2];
     uint32_t arg;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 // Encapsulates the HELLO packet
@@ -82,7 +89,7 @@ struct evt_hello {
     uint32_t magic1;
     uint8_t version;
     uint32_t magic2;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 // When the NAND starts up, it gives an ID packet (0x90 aa ss ss ss ss ss ss ss ss)
@@ -91,14 +98,14 @@ struct evt_nand_id {
     uint8_t addr;
     uint8_t size;
     uint8_t id[8];
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 // The challenge (and response) of a NAND "status" query (0x70 ss)
 struct evt_nand_status {
     struct evt_header hdr;
     uint8_t status;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 // Read a page of NAND (0x05 aa bb cc dd 0xe0 ...)
@@ -108,7 +115,7 @@ struct evt_nand_change_read_column {
     uint32_t count;
     uint8_t data[16384];
     uint8_t unknown[2];
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct evt_nand_read {
     struct evt_header hdr;
@@ -116,7 +123,7 @@ struct evt_nand_read {
     uint32_t count;
     uint8_t data[16384];
     uint8_t unknown[2];
-} __attribute__((__packed__));
+} MY_PACK;
 
     
 
@@ -127,31 +134,31 @@ struct evt_nand_parameter_read {
     uint8_t addr;
     uint16_t count;
     uint8_t data[256];
-} __attribute__((__packed__));
+} MY_PACK;
 
 // Unknown address set (charge, maybe?) (0x65 aa bb cc)
 struct evt_nand_sandisk_charge1 {
     struct evt_header hdr;
     uint8_t addr[3];
-} __attribute__((__packed__));
+} MY_PACK;
 
 // Unknown address set (charge, maybe?) (0x60 aa bb cc 0x30)
 struct evt_nand_sandisk_charge2 {
     struct evt_header hdr;
     uint8_t addr[3];
-} __attribute__((__packed__));
+} MY_PACK;
 
 // Unknown set vendor code (0x5c 0xc5)
 struct evt_nand_unk_sandisk_code {
     struct evt_header hdr;
-} __attribute__((__packed__));
+} MY_PACK;
 
 // Set vendor parameter (when in vendor-code mode above) (0x55 aa dd)
 struct evt_nand_unk_sandisk_param {
     struct evt_header hdr;
     uint8_t addr;
     uint8_t data;
-} __attribute__((__packed__));
+} MY_PACK;
 
 // We have no idea
 struct evt_nand_unk_command {
@@ -162,7 +169,7 @@ struct evt_nand_unk_command {
     uint8_t num_data;
     uint8_t data[4096];
     uint8_t unknown[2]; // Average of the "unknown" pins
-} __attribute__((__packed__));
+} MY_PACK;
 
 // We have no idea and we're lost
 struct evt_nand_unk {
@@ -170,27 +177,27 @@ struct evt_nand_unk {
     uint8_t data;
     uint8_t ctrl;
     uint16_t unknown;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct evt_nand_reset {
     struct evt_header hdr;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct evt_nand_cache1 {
     struct evt_header hdr;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct evt_nand_cache2 {
     struct evt_header hdr;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct evt_nand_cache3 {
     struct evt_header hdr;
-} __attribute__((__packed__));
+} MY_PACK;
 
 struct evt_nand_cache4 {
     struct evt_header hdr;
-} __attribute__((__packed__));
+} MY_PACK;
 
 
 
@@ -217,7 +224,7 @@ union evt {
     struct evt_nand_cache2 nand_cache2;
     struct evt_nand_cache3 nand_cache3;
     struct evt_nand_cache4 nand_cache4;
-} __attribute__((__packed__));
+} MY_PACK;
 
 int event_get_next(struct state *st, union evt *evt);
 int event_unget(struct state *st, union evt *evt);
