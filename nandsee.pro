@@ -22,11 +22,11 @@ SOURCES += main.cpp\
     commands.cpp \
     hexwindow.cpp \
     tapboardprocessor.cpp \
-    joiner.c \
-    grouper.c \
-    nand.c \
-    sorter.c \
-    tapboardprocessorprivate.cpp
+    tapboardprocessorprivate.cpp \
+    nand.cpp \
+    joiner.cpp \
+    grouper.cpp \
+    sorter.cpp
 
 HEADERS  += nandseewindow.h \
     nandview.h \

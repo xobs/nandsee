@@ -1,10 +1,6 @@
 #ifndef __STATE_H__
 #define __STATE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 struct pkt;
@@ -52,8 +48,5 @@ uint8_t nand_cs(uint8_t ctrl);
 uint8_t nand_rb(uint8_t ctrl);
 
 
-#ifdef __cplusplus
-};
-#endif
 
 #endif // __STATE_H__

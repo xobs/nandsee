@@ -7,129 +7,129 @@
 #include "event-struct.h"
 
 struct state;
-extern "C" {
-    struct state *jstate_init();
-    int jstate_state(struct state *st);
-    int jstate_run(struct state *st);
-    int jstate_free(struct state **st);
 
-    struct state *gstate_init();
-    int gstate_state(struct state *st);
-    int gstate_run(struct state *st);
-    int gstate_free(struct state **st);
+struct state *jstate_init();
+int jstate_state(struct state *st);
+int jstate_run(struct state *st);
+int jstate_free(struct state **st);
 
-    struct state *sstate_init();
-    int sstate_state(struct state *st);
-    int sstate_run(struct state *st);
-    int sstate_free(struct state **st);
+struct state *gstate_init();
+int gstate_state(struct state *st);
+int gstate_run(struct state *st);
+int gstate_free(struct state **st);
 
-    int packet_get_next_raw(struct state *st, struct pkt *pkt) {
-        int ret;
+struct state *sstate_init();
+int sstate_state(struct state *st);
+int sstate_run(struct state *st);
+int sstate_free(struct state **st);
 
-        ret = read(st->fd, &pkt->header, sizeof(pkt->header));
-        if (ret < 0)
-            return -1;
+int packet_get_next_raw(struct state *st, struct pkt *pkt) {
+	int ret;
 
-        if (ret == 0)
-            return -2;
-        pkt->header.sec = ntohl(pkt->header.sec);
-        pkt->header.nsec = ntohl(pkt->header.nsec);
-        pkt->header.size = ntohs(pkt->header.size);
+	ret = read(st->fd, &pkt->header, sizeof(pkt->header));
+	if (ret < 0)
+		return -1;
 
-        ret = read(st->fd, &pkt->data, pkt->header.size-sizeof(pkt->header));
-        if (ret < 0)
-            return -1;
+	if (ret == 0)
+		return -2;
+	pkt->header.sec = ntohl(pkt->header.sec);
+	pkt->header.nsec = ntohl(pkt->header.nsec);
+	pkt->header.size = ntohs(pkt->header.size);
 
-        if (ret == 0)
-            return -2;
+	ret = read(st->fd, &pkt->data, pkt->header.size-sizeof(pkt->header));
+	if (ret < 0)
+		return -1;
 
-        return 0;
-    }
+	if (ret == 0)
+		return -2;
 
-    int packet_get_next(struct state *st, struct pkt *pkt) {
-        int ret;
-        ret = packet_get_next_raw(st, pkt);
-        if (ret)
-            return ret;
-        if (pkt->header.type == PACKET_NAND_CYCLE)
-            pkt->data.nand_cycle.data = nand_unscramble_byte(pkt->data.nand_cycle.data);
-        return ret;
-    }
+	return 0;
+}
 
-    int packet_unget(struct state *st, struct pkt *pkt) {
-        return lseek(st->fd, -pkt->header.size, SEEK_CUR);
-    }
+int packet_get_next(struct state *st, struct pkt *pkt) {
+	int ret;
+	ret = packet_get_next_raw(st, pkt);
+	if (ret)
+		return ret;
+	if (pkt->header.type == PACKET_NAND_CYCLE)
+		pkt->data.nand_cycle.data = nand_unscramble_byte(pkt->data.nand_cycle.data);
+	return ret;
+}
 
-    int packet_write(struct state *st, struct pkt *pkt) {
-        struct pkt cp;
-        memcpy(&cp, pkt, sizeof(cp));
-        cp.header.sec = htonl(pkt->header.sec);
-        cp.header.nsec = htonl(pkt->header.nsec);
-        cp.header.size = htons(pkt->header.size);
+int packet_unget(struct state *st, struct pkt *pkt) {
+	return lseek(st->fd, -pkt->header.size, SEEK_CUR);
+}
 
-        return write(st->out_fd, &cp, ntohs(cp.header.size));
-    }
+int packet_write(struct state *st, struct pkt *pkt) {
+	struct pkt cp;
+	memcpy(&cp, pkt, sizeof(cp));
+	cp.header.sec = htonl(pkt->header.sec);
+	cp.header.nsec = htonl(pkt->header.nsec);
+	cp.header.size = htons(pkt->header.size);
 
-    int event_get_next(struct state *st, union evt *evt) {
-        int ret;
-        int bytes_to_read;
+	return write(st->out_fd, &cp, ntohs(cp.header.size));
+}
 
-        ret = read(st->fd, &evt->header, sizeof(evt->header));
-        if (ret < 0) {
-            perror("Couldn't read header");
-            return -1;
-        }
+int event_get_next(struct state *st, union evt *evt) {
+	int ret;
+	int bytes_to_read;
 
-        if (ret == 0) {
-            perror("End of file for header");
-            return -2;
-        }
-        evt->header.sec_start = ntohl(evt->header.sec_start);
-        evt->header.nsec_start = ntohl(evt->header.nsec_start);
-        evt->header.sec_end = ntohl(evt->header.sec_end);
-        evt->header.nsec_end = ntohl(evt->header.nsec_end);
-        evt->header.size = ntohl(evt->header.size);
+	ret = read(st->fd, &evt->header, sizeof(evt->header));
+	if (ret < 0) {
+		perror("Couldn't read header");
+		return -1;
+	}
 
-        bytes_to_read = evt->header.size - sizeof(evt->header);
-        ret = read(st->fd,
-                   ((char *)&(evt->header)) + sizeof(evt->header),
-                   bytes_to_read);
+	if (ret == 0) {
+		perror("End of file for header");
+		return -2;
+	}
+	evt->header.sec_start = ntohl(evt->header.sec_start);
+	evt->header.nsec_start = ntohl(evt->header.nsec_start);
+	evt->header.sec_end = ntohl(evt->header.sec_end);
+	evt->header.nsec_end = ntohl(evt->header.nsec_end);
+	evt->header.size = ntohl(evt->header.size);
 
-        if (ret < 0) {
-            perror("Couldn't read");
-            return -1;
-        }
+	bytes_to_read = evt->header.size - sizeof(evt->header);
+	ret = read(st->fd,
+			   ((char *)&(evt->header)) + sizeof(evt->header),
+			   bytes_to_read);
 
-        if (ret == 0 && bytes_to_read > 0) {
-            perror("End of file");
-            return -2;
-        }
+	if (ret < 0) {
+		perror("Couldn't read");
+		return -1;
+	}
 
-        return 0;
-    }
+	if (ret == 0 && bytes_to_read > 0) {
+		perror("End of file");
+		return -2;
+	}
 
-    int event_unget(struct state *st, union evt *evt) {
-        return lseek(st->fd, -evt->header.size, SEEK_CUR);
-    }
+	return 0;
+}
 
-    int event_write(struct state *st, union evt *evt) {
-        int ret;
-        evt->header.sec_start = htonl(evt->header.sec_start);
-        evt->header.nsec_start = htonl(evt->header.nsec_start);
-        evt->header.sec_end = htonl(evt->header.sec_end);
-        evt->header.nsec_end = htonl(evt->header.nsec_end);
-        evt->header.size = htonl(evt->header.size);
-        ret = write(st->out_fd, evt, ntohl(evt->header.size));
+int event_unget(struct state *st, union evt *evt) {
+	return lseek(st->fd, -evt->header.size, SEEK_CUR);
+}
 
-        evt->header.sec_start = ntohl(evt->header.sec_start);
-        evt->header.nsec_start = ntohl(evt->header.nsec_start);
-        evt->header.sec_end = ntohl(evt->header.sec_end);
-        evt->header.nsec_end = ntohl(evt->header.nsec_end);
-        evt->header.size = ntohl(evt->header.size);
+int event_write(struct state *st, union evt *evt) {
+	int ret;
+	evt->header.sec_start = htonl(evt->header.sec_start);
+	evt->header.nsec_start = htonl(evt->header.nsec_start);
+	evt->header.sec_end = htonl(evt->header.sec_end);
+	evt->header.nsec_end = htonl(evt->header.nsec_end);
+	evt->header.size = htonl(evt->header.size);
+	ret = write(st->out_fd, evt, ntohl(evt->header.size));
 
-        return ret;
-    }
-};
+	evt->header.sec_start = ntohl(evt->header.sec_start);
+	evt->header.nsec_start = ntohl(evt->header.nsec_start);
+	evt->header.sec_end = ntohl(evt->header.sec_end);
+	evt->header.nsec_end = ntohl(evt->header.nsec_end);
+	evt->header.size = ntohl(evt->header.size);
+
+	return ret;
+}
+
 
 TapboardProcessorPrivate::TapboardProcessorPrivate(QObject *parent)
     : QObject(parent)

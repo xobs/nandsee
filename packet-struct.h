@@ -1,9 +1,6 @@
 #ifndef __PACKET_H__
 #define __PACKET_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdint.h>
 
@@ -147,10 +144,6 @@ struct pkt {
 	struct pkt_header header;
 	union pkt_data data;
 } __attribute__((__packed__));
-
-#ifdef __cplusplus
-};
-#endif
 
 
 #endif // __PACKET_H__

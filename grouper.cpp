@@ -43,16 +43,16 @@ static int st_grouping(struct state *st);
 static int st_done(struct state *st);
 
 static int (*st_funcs[])(struct state *st) = {
-    [ST_UNINITIALIZED]  = st_uninitialized,
-    [ST_DONE]           = st_done,
-    [ST_SCANNING]       = st_scanning,
-    [ST_GROUPING]       = st_grouping,
+	st_uninitialized,
+	st_done,
+	st_scanning,
+	st_grouping,
 };
 
 
 static int evt_fill_header(void *arg, uint32_t sec_start, uint32_t nsec_start,
                     uint32_t size, uint8_t type) {
-    struct evt_header *hdr = arg;
+	struct evt_header *hdr = (struct evt_header *)arg;
     memset(hdr, 0, sizeof(*hdr));
     hdr->sec_start = htonl(sec_start);
     hdr->nsec_start = htonl(nsec_start);
@@ -62,8 +62,8 @@ static int evt_fill_header(void *arg, uint32_t sec_start, uint32_t nsec_start,
 }
 
 static int evt_fill_end(void *arg, uint32_t sec_end, uint32_t nsec_end) {
-    struct evt_header *hdr = arg;
-    hdr->sec_end = htonl(sec_end);
+	struct evt_header *hdr = (struct evt_header *)arg;
+	hdr->sec_end = htonl(sec_end);
     hdr->nsec_end = htonl(nsec_end);
     return 0;
 }
@@ -611,7 +611,7 @@ static int write_nand_cmd(struct state *st, struct pkt *pkt) {
 
 // Initialize the "group" state machine
 struct state *gstate_init() {
-    struct state *st = malloc(sizeof(struct state));
+	struct state *st = (struct state *)malloc(sizeof(struct state));
     memset(st, 0, sizeof(*st));
     st->is_logging = 0;
     st->st = ST_SCANNING;
@@ -649,7 +649,7 @@ void *evt_take(struct state *st, int type) {
 }
 
 int evt_put(struct state *st, void *v) {
-    struct evt_header *val = v;
+	struct evt_header *val = (struct evt_header *)v;
     unsigned int i;
     for (i=0; i<(sizeof(st->events)/sizeof(st->events[0])); i++) {
         if (!st->events[i]) {
@@ -688,7 +688,7 @@ static int st_scanning(struct state *st) {
 
         else if (pkt.header.type == PACKET_COMMAND) {
             if (pkt.data.command.start_stop == CMD_STOP) {
-                struct evt_net_cmd *net = evt_take(st, EVT_NET_CMD);
+				struct evt_net_cmd *net = (struct evt_net_cmd *)evt_take(st, EVT_NET_CMD);
                 if (!net) {
                     struct evt_net_cmd evt;
                     fprintf(stderr, "NET_CMD end without begin\n");
@@ -709,13 +709,13 @@ static int st_scanning(struct state *st) {
                 }
             }
             else {
-                struct evt_net_cmd *net = evt_take(st, EVT_NET_CMD);
+				struct evt_net_cmd *net = (struct evt_net_cmd *)evt_take(st, EVT_NET_CMD);
                 if (net) {
                     fprintf(stderr, "Multiple NET_CMDs going at once\n");
                     free(net);
                 }
 
-                net = malloc(sizeof(struct evt_net_cmd));
+				net = (struct evt_net_cmd *)malloc(sizeof(struct evt_net_cmd));
                 evt_fill_header(net, pkt.header.sec, pkt.header.nsec,
                                 sizeof(*net), EVT_NET_CMD);
                 net->cmd[0] = pkt.data.command.cmd[0];
@@ -727,7 +727,7 @@ static int st_scanning(struct state *st) {
 
         else if (pkt.header.type == PACKET_BUFFER_DRAIN) {
             if (pkt.data.buffer_drain.start_stop == PKT_BUFFER_DRAIN_STOP) {
-                struct evt_buffer_drain *evt = evt_take(st, EVT_BUFFER_DRAIN);
+				struct evt_buffer_drain *evt = (struct evt_buffer_drain *)evt_take(st, EVT_BUFFER_DRAIN);
                 if (!evt) {
                     struct evt_buffer_drain evt;
                     fprintf(stderr, "BUFFER_DRAIN end without begin\n");
@@ -743,13 +743,13 @@ static int st_scanning(struct state *st) {
                 }
             }
             else {
-                struct evt_buffer_drain *evt = evt_take(st, EVT_BUFFER_DRAIN);
+				struct evt_buffer_drain *evt = (struct evt_buffer_drain *)evt_take(st, EVT_BUFFER_DRAIN);
                 if (evt) {
                     fprintf(stderr, "Multiple BUFFER_DRAINs going at once\n");
                     free(evt);
                 }
 
-                evt = malloc(sizeof(struct evt_buffer_drain));
+				evt = (struct evt_buffer_drain *)malloc(sizeof(struct evt_buffer_drain));
                 evt_fill_header(evt, pkt.header.sec, pkt.header.nsec,
                                 sizeof(*evt), EVT_BUFFER_DRAIN);
                 evt_put(st, evt);
@@ -757,10 +757,10 @@ static int st_scanning(struct state *st) {
         }
 
         else if (pkt.header.type == PACKET_SD_CMD_ARG) {
-            struct evt_sd_cmd *evt = evt_take(st, EVT_SD_CMD);
+			struct evt_sd_cmd *evt = (struct evt_sd_cmd *)evt_take(st, EVT_SD_CMD);
             struct pkt_sd_cmd_arg *sd = &pkt.data.sd_cmd_arg;
             if (!evt) {
-                evt = malloc(sizeof(struct evt_sd_cmd));
+				evt = (struct evt_sd_cmd *)malloc(sizeof(struct evt_sd_cmd));
                 memset(evt, 0, sizeof(*evt));
                 evt_fill_header(evt, pkt.header.sec, pkt.header.nsec,
                                 sizeof(*evt), EVT_SD_CMD);
@@ -781,7 +781,7 @@ static int st_scanning(struct state *st) {
             evt_put(st, evt);
         }
         else if (pkt.header.type == PACKET_SD_RESPONSE) {
-            struct evt_sd_cmd *evt = evt_take(st, EVT_SD_CMD);
+			struct evt_sd_cmd *evt = (struct evt_sd_cmd *)evt_take(st, EVT_SD_CMD);
             // Ignore CMD17, as we'll pick it up on the PACKET_SD_DATA packet
             if (evt->cmd == 17) {
                 evt_put(st, evt);
@@ -804,7 +804,7 @@ static int st_scanning(struct state *st) {
         }
 
         else if (pkt.header.type == PACKET_SD_DATA) {
-            struct evt_sd_cmd *evt = evt_take(st, EVT_SD_CMD);
+			struct evt_sd_cmd *evt = (struct evt_sd_cmd *)evt_take(st, EVT_SD_CMD);
             struct pkt_sd_data *sd = &pkt.data.sd_data;
             unsigned int offset;
             if (!evt) {

@@ -20,7 +20,7 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 	QFileDialog selectFile(ui->centralWidget);
 	selectFile.setFileMode(QFileDialog::ExistingFile);
     QStringList fileTypes;
-    fileTypes << "Tap Board event file (*.tbevent)"
+	fileTypes << "Tap Board event files (*.tbevent)"
               << "Raw Tap Board capture files (*.tbraw)"
               ;
     selectFile.setNameFilters(fileTypes);

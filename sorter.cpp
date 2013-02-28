@@ -31,11 +31,11 @@ static int st_done(struct state *st);
 static int st_write(struct state *st);
 
 static int (*st_funcs[])(struct state *st) = {
-    [ST_UNINITIALIZED]  = st_uninitialized,
-    [ST_DONE]           = st_done,
-    [ST_SCANNING]       = st_scanning,
-    [ST_GROUPING]       = st_grouping,
-    [ST_WRITE]          = st_write,
+	st_uninitialized,
+	st_done,
+	st_scanning,
+	st_grouping,
+	st_write,
 };
 
 static uint32_t hdrs[16777216];
@@ -43,10 +43,10 @@ static int hdr_count;
 
 
 int compare_event_addrs(void *thunk, const void *a1, const void *a2) {
-    struct state *st = thunk;
-    const uint32_t *o1 = a1;
-    const uint32_t *o2 = a2;
-    const union evt e1, e2;
+	struct state *st = (struct state *)thunk;
+	const uint32_t *o1 = (uint32_t *)a1;
+	const uint32_t *o2 = (uint32_t *)a2;
+	union evt e1, e2;
 
     lseek(st->fd, *o1, SEEK_SET);
     event_get_next(st, &e1);
@@ -68,7 +68,7 @@ int compare_event_addrs(void *thunk, const void *a1, const void *a2) {
 
 // Initialize the "joiner" state machine
 struct state *sstate_init(void) {
-    struct state *st = malloc(sizeof(struct state));
+	struct state *st = (struct state *)malloc(sizeof(struct state));
 
     memset(st, 0, sizeof(*st));
     st->is_logging = 0;

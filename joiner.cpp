@@ -32,13 +32,13 @@ static int st_done(struct state *st);
 static int st_overflowed(struct state *st);
 
 static int (*st_funcs[])(struct state *st) = {
-    [ST_UNINITIALIZED]  = st_uninitialized,
-    [ST_DONE]           = st_done,
-    [ST_SEARCHING]      = st_searching,
-    [ST_JOINING]        = st_joining,
-    [ST_DRAINING]       = st_draining,
-    [ST_BACKTRACK]      = st_backtrack,
-    [ST_OVERFLOWED]     = st_overflowed,
+	st_uninitialized,
+	st_done,
+	st_searching,
+	st_joining,
+	st_draining,
+	st_backtrack,
+	st_overflowed,
 };
 
 /* Pulls a packet out of the buffer.
@@ -95,7 +95,7 @@ static int is_nand(struct state *st, struct pkt *pkt) {
 
 // Initialize the "joiner" state machine
 struct state *jstate_init() {
-    struct state *st = malloc(sizeof(struct state));
+	struct state *st = (struct state *)malloc(sizeof(struct state));
     memset(st, 0, sizeof(*st));
     st->is_logging = 0;
     st->st = ST_SEARCHING;

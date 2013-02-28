@@ -1,10 +1,6 @@
 #ifndef __EVENT_STRUCT_H_
 #define __EVENT_STRUCT_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define EVENT_MAGIC_1 0x61728394
 #define EVENT_MAGIC_2 0x74931723
 
@@ -224,9 +220,5 @@ union evt {
 int event_get_next(struct state *st, union evt *evt);
 int event_unget(struct state *st, union evt *evt);
 int event_write(struct state *st, union evt *evt);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif //__EVENT_STRUCT_H_
