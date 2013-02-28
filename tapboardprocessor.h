@@ -2,6 +2,7 @@
 #define TAPBOARDPROCESSOR_H
 
 #include <QObject>
+#include <QProgressDialog>
 
 class TapboardProcessor : public QObject
 {
@@ -10,12 +11,17 @@ public:
     explicit TapboardProcessor(QObject *parent = 0);
     int processRawFile(QString &rawFileName);
     
+private:
+    QThread *backgroundThread;
+
+    QProgressDialog *progressWindow;
+
 signals:
     
 public slots:
-    void joinFile();
-    void groupFile();
-    void sortFile();
+    void gotJoinFinished();
+    void gotGroupFinished();
+    void gotSortFinished();
 };
 
 #endif // TAPBOARDPROCESSOR_H
