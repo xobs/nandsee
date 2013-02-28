@@ -143,7 +143,7 @@ void NandSeeWindow::updateEventDetails()
 
 
 	rawPacketHex = "";
-	for (unsigned int i=sizeof(evt_header); i<e.rawPacketSize(); i++) {
+	for (int i=sizeof(evt_header); i<e.rawPacketSize(); i++) {
 		if (i>sizeof(evt_header))
 			rawPacketHex += " ";
 		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
@@ -182,6 +182,54 @@ void NandSeeWindow::updateEventDetails()
 		ui->attribute1Label->setText("NAND Status:");
 		ui->attribute1Label->setVisible(true);
 		ui->attribute1Value->setText(QString::number(e.nandStatus(), 16));
+		ui->attribute1Value->setVisible(true);
+	}
+	else if (e.eventType() == EVT_HELLO) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("Stream version:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(QString::number(e.helloVersion()));
+		ui->attribute1Value->setVisible(true);
+	}
+	else if (e.eventType() == EVT_NET_CMD) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("Network command:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(e.netCmd());
+		ui->attribute1Value->setVisible(true);
+
+		ui->attribute2Label->setText("Argument:");
+		ui->attribute2Label->setVisible(true);
+		ui->attribute2Value->setText(QString::number(e.netArg()));
+		ui->attribute2Value->setVisible(true);
+	}
+	if (e.eventType() == EVT_NAND_PARAMETER_READ) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("Param Addr:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(QString::number(e.nandParameterAddr(), 16));
+		ui->attribute1Value->setVisible(true);
+	}
+	if (e.eventType() == EVT_NAND_SANDISK_CHARGE1
+		  || e.eventType() == EVT_NAND_SANDISK_CHARGE2) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("Charge Addr:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(e.nandSandiskChargeAddr());
+		ui->attribute1Value->setVisible(true);
+	}
+	if (e.eventType() == EVT_NAND_READ) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("Address:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(e.nandReadAddr());
+		ui->attribute1Value->setVisible(true);
+	}
+	if (e.eventType() == EVT_NAND_CHANGE_READ_COLUMN) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("Address:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(e.nandChangeReadColumnAddr());
 		ui->attribute1Value->setVisible(true);
 	}
 }

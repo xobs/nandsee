@@ -50,6 +50,8 @@ public:
 
 	/* NAND Change Read Column or NAND Read */
 	const QByteArray &data() const;
+	const QString &nandReadAddr() const;
+	const QString &nandChangeReadColumnAddr() const;
 
     /* Network command */
     const QString &netCmd() const;
@@ -69,6 +71,12 @@ public:
 	int rawPacketSize() const;
 	const QByteArray &rawPacket() const;
 
+	/* Parameter read address */
+	uint8_t nandParameterAddr() const;
+
+	/* Misc. Sandisk commands */
+	const QString &nandSandiskChargeAddr() const;
+
 private:
     union evt evt;
 	QByteArray _dataAsByteArray;
@@ -76,6 +84,9 @@ private:
     QString nandIdString;
 	QByteArray _data;
     QString _netCmd;
+	QString _sandiskChargeAddr;
+	QString _nandReadAddr;
+	QString _nandReadColumnAddr;
 	double _entropy;
 
 signals:

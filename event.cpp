@@ -170,13 +170,25 @@ void Event::decodeEvent() {
         _netCmd.append(evt.net_cmd.cmd[1]);
     }
 
+	_nandReadColumnAddr = "";
 	if (eventType() == EVT_NAND_CHANGE_READ_COLUMN) {
+		for (unsigned int i=0; i<sizeof(evt.nand_change_read_coumn.addr); i++) {
+			if (i>0)
+				_nandReadColumnAddr += " ";
+			_nandReadColumnAddr += QString("%1").arg(evt.nand_change_read_coumn.addr[i], 2, 16, QChar('0'));
+		}
 		_data.resize(_ntohl(evt.nand_change_read_coumn.count));
 		memcpy(_data.data(), evt.nand_change_read_coumn.data, _ntohl(evt.nand_change_read_coumn.count));
 		_entropy = getEntropy(_data);
 	}
 
+	_nandReadAddr = "";
 	if (eventType() == EVT_NAND_READ) {
+		for (unsigned int i=0; i<sizeof(evt.nand_read.addr); i++) {
+			if (i>0)
+				_nandReadAddr += " ";
+			_nandReadAddr += QString("%1").arg(evt.nand_read.addr[i], 2, 16, QChar('0'));
+		}
 		_data.resize(_ntohl(evt.nand_read.count));
 		memcpy(_data.data(), evt.nand_read.data, _ntohl(evt.nand_read.count));
 		_entropy = getEntropy(_data);
@@ -186,6 +198,22 @@ void Event::decodeEvent() {
 		_data.resize(_ntohs(evt.nand_parameter_read.count));
 		memcpy(_data.data(), evt.nand_parameter_read.data, _ntohs(evt.nand_parameter_read.count));
 		_entropy = getEntropy(_data);
+	}
+
+	_sandiskChargeAddr = "";
+	if (eventType() == EVT_NAND_SANDISK_CHARGE1) {
+		for (unsigned int i=0; i<sizeof(evt.nand_sandisk_charge1.addr); i++) {
+			if (i>0)
+				_sandiskChargeAddr += " ";
+			_sandiskChargeAddr += QString("%1").arg(evt.nand_sandisk_charge1.addr[i], 2, 16, QChar('0'));
+		}
+	}
+	else if (eventType() == EVT_NAND_SANDISK_CHARGE2) {
+		for (unsigned int i=0; i<sizeof(evt.nand_sandisk_charge2.addr); i++) {
+			if (i>0)
+				_sandiskChargeAddr += " ";
+			_sandiskChargeAddr += QString("%1").arg(evt.nand_sandisk_charge2.addr[i], 2, 16, QChar('0'));
+		}
 	}
 
 	_dataAsByteArray.setRawData((char *)&evt, _ntohl(evt.header.size));
@@ -284,6 +312,26 @@ uint8_t Event::nandSandiskParamData() const
 uint8_t Event::nandStatus() const
 {
 	return evt.nand_status.status;
+}
+
+uint8_t Event::nandParameterAddr() const
+{
+	return evt.nand_parameter_read.addr;
+}
+
+const QString &Event::nandSandiskChargeAddr() const
+{
+	return _sandiskChargeAddr;
+}
+
+const QString &Event::nandReadAddr() const
+{
+	return _nandReadAddr;
+}
+
+const QString &Event::nandChangeReadColumnAddr() const
+{
+	return _nandReadColumnAddr;
 }
 
 qreal Event::entropy() const
