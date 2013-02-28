@@ -398,8 +398,14 @@ static int evt_write_nand_parameter_page(struct state *st, struct pkt *pkt) {
         packet_get_next(st, pkt);
     }
     packet_unget(st, pkt);
+    evt.count = _htons(evt.count);
 
-	st->out_fdh->write((char *)&evt, sizeof(evt));
+    evt.hdr.size = sizeof(evt.hdr)
+                 + sizeof(evt.addr)
+                 + sizeof(evt.count)
+                 + _htons(evt.count);
+    evt.hdr.size = _htonl(evt.hdr.size);
+	st->out_fdh->write((char *)&evt, _ntohl(evt.hdr.size));
 	return 0;
 }
 
@@ -461,8 +467,15 @@ static int evt_write_nand_change_read_column(struct state *st, struct pkt *pkt) 
     }
     packet_unget(st, pkt);
 
+    evt.hdr.size = sizeof(evt.hdr)
+                 + sizeof(evt.addr)
+                 + sizeof(evt.count)
+                 + sizeof(evt.unknown)
+                 + evt.count;
+    evt.hdr.size = _htonl(evt.hdr.size);
+
     evt.count = _htonl(evt.count);
-	st->out_fdh->write((char *)&evt, sizeof(evt));
+	st->out_fdh->write((char *)&evt, _ntohl(evt.hdr.size));
 	return 0;
 }
 
@@ -524,9 +537,16 @@ static int evt_write_nand_read(struct state *st, struct pkt *pkt) {
     }
     packet_unget(st, pkt);
 
+    evt.hdr.size = sizeof(evt.hdr)
+                 + sizeof(evt.addr)
+                 + sizeof(evt.count)
+                 + sizeof(evt.unknown)
+                 + evt.count;
+    evt.hdr.size = _htonl(evt.hdr.size);
+
     evt.count = _htonl(evt.count);
 
-	st->out_fdh->write((char *)&evt, sizeof(evt));
+	st->out_fdh->write((char *)&evt, _ntohl(evt.hdr.size));
 	return 0;
 }
 
@@ -788,7 +808,7 @@ static int st_scanning(struct state *st) {
                 evt->num_args = _htonl(evt->num_args);
 
                 evt_fill_end(evt, pkt.header.sec, pkt.header.nsec);
-				st->out_fdh->write((char *)evt, sizeof(*evt));
+				st->out_fdh->write((char *)evt, _ntohl(evt->hdr.size));
                 free(evt);
             }
         }
@@ -808,7 +828,7 @@ static int st_scanning(struct state *st) {
             evt->num_results = _htonl(evt->num_results);
             evt->num_args = _htonl(evt->num_args);
             evt_fill_end(evt, pkt.header.sec, pkt.header.nsec);
-			st->out_fdh->write((char *)evt, sizeof(*evt));
+            st->out_fdh->write((char *)evt, _ntohl(evt->hdr.size));
             free(evt);
         }
 
