@@ -511,7 +511,7 @@ static int evt_write_nand_read(struct state *st, struct pkt *pkt) {
     evt.addr[5] = pkts[5].data.nand_cycle.data;
 
     evt.count = 0;
-    evt_fill_end(&evt, pkts[6].header.sec, pkts[6].header.nsec);
+    evt_fill_end(&evt, pkts[5].header.sec, pkts[5].header.nsec);
     memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
     packet_get_next(st, pkt);
     while (nand_re(pkt->data.nand_cycle.control)) {
