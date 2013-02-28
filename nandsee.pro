@@ -20,7 +20,12 @@ SOURCES += main.cpp\
     qhexedit_p.cpp \
     xbytearray.cpp \
     commands.cpp \
-    hexwindow.cpp
+    hexwindow.cpp \
+    tapboardprocessor.cpp \
+    joiner.c \
+    grouper.c \
+    nand.c \
+    sorter.c
 
 HEADERS  += nandseewindow.h \
     nandview.h \
@@ -32,7 +37,10 @@ HEADERS  += nandseewindow.h \
     qhexedit_p.h \
     xbytearray.h \
     commands.h \
-    hexwindow.h
+    hexwindow.h \
+    tapboardprocessor.h \
+    state.h \
+    packet-struct.h
 
 FORMS    += nandseewindow.ui \
     hexwindow.ui

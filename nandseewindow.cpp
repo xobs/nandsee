@@ -9,6 +9,7 @@
 #include "eventitemmodel.h"
 #include "hexwindow.h"
 #include "ui_nandseewindow.h"
+#include "tapboardprocessor.h"
 
 NandSeeWindow::NandSeeWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -18,7 +19,11 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 
 	QFileDialog selectFile(ui->centralWidget);
 	selectFile.setFileMode(QFileDialog::ExistingFile);
-	selectFile.setNameFilter("Tap Board event file (*.tbevent)");
+    QStringList fileTypes;
+    fileTypes << "Tap Board event file (*.tbevent)"
+              << "Raw Tap Board capture files (*.tbraw)"
+              ;
+    selectFile.setNameFilters(fileTypes);
 	if (!selectFile.exec()) {
 		qDebug() << "No file selected";
 		exit(0);
@@ -26,6 +31,15 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 
 	QString fileName;
 	fileName = selectFile.selectedFiles()[0];
+
+    // If we've got a raw tapboard file, process it first
+    if (fileName.endsWith(".tbraw", Qt::CaseInsensitive)) {
+        TapboardProcessor tp;
+        if (tp.processRawFile(fileName)) {
+            qDebug() << "Raw stream couldn't be processed";
+            exit(0);
+        }
+    }
 
 	_eventItemModel = new EventItemModel(this);
 	if (_eventItemModel->loadFile(fileName)) {
@@ -36,6 +50,7 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 	ui->eventList->setModel(_eventItemModel);
 	ui->eventList->setSelectionModel(_eventItemSelections);
 
+    /* Wire everything up */
 	connect(_eventItemSelections, SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
 			this, SLOT(eventSelectionChanged(QItemSelection, QItemSelection)));
 	connect(_eventItemSelections, SIGNAL(currentChanged(QModelIndex,QModelIndex)),

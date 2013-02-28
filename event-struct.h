@@ -1,6 +1,10 @@
 #ifndef __EVENT_STRUCT_H_
 #define __EVENT_STRUCT_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define EVENT_MAGIC_1 0x61728394
 #define EVENT_MAGIC_2 0x74931723
 
@@ -217,16 +221,12 @@ union evt {
     struct evt_nand_cache4 nand_cache4;
 } __attribute__((__packed__));
 
-int evt_fill_header(void *arg, uint32_t sec_start, uint32_t nsec_start,
-                    uint32_t size, uint8_t type);
-int evt_fill_end(void *arg,
-                 uint32_t sec_end, uint32_t nsec_end);
-int evt_write_hello(struct state *st, struct pkt *pkt);
-int evt_write_reset(struct state *st, struct pkt *pkt);
-int evt_write_nand_unk(struct state *st, struct pkt *pkt);
-
 int event_get_next(struct state *st, union evt *evt);
 int event_unget(struct state *st, union evt *evt);
 int event_write(struct state *st, union evt *evt);
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif //__EVENT_STRUCT_H_
