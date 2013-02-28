@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>NandSeeWindow</string>
+   <string>Nand See</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -277,7 +277,7 @@
      <item row="2" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
-        <string>Raw packet</string>
+        <string>Raw event body</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_4">
         <property name="margin">
@@ -301,7 +301,7 @@
      <item row="1" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
-        <string>Raw packet header</string>
+        <string>Raw event header</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
         <property name="margin">
