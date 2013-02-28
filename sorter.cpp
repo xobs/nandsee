@@ -104,6 +104,7 @@ static int sstate_set(struct state *st, enum prog_state new_state) {
 
 // Dummy state that should never be reached
 static int st_uninitialized(struct state *st) {
+    Q_UNUSED(st);
     printf("state error: should not be in this state\n");
     return -1;
 }
@@ -148,19 +149,19 @@ static int st_grouping(struct state *st) {
  */
 static int st_write(struct state *st) {
     int jump_offset;
-    uint32_t word;
+    struct evt_file_header file_header;
     uint32_t offset;
 
     printf("Writing out...\n");
 	st->out_fdh->seek(0);
     offset = 0;
 
-    // Write out magic
-	offset += st->out_fdh->write(EVENT_HDR_1, 4);
-
-    // Write out how many header items there are
-    word = _htonl(hdr_count);
-	offset += st->out_fdh->write((char *)&word, sizeof(word));
+    // Write out the file header
+    memset(&file_header, 0, sizeof(file_header));
+    memcpy(file_header.magic1, EVENT_HDR_1, strlen(EVENT_HDR_1));
+    file_header.version = _ntohl(1);
+    file_header.count = _htonl(hdr_count);
+	offset += st->out_fdh->write((char *)&file_header, sizeof(file_header));
 
     // Advance the offset past the jump table
     offset += hdr_count*sizeof(offset);
@@ -195,5 +196,6 @@ static int st_write(struct state *st) {
 }
 
 static int st_done(struct state *st) {
+    Q_UNUSED(st);
     return 1;
 }

@@ -41,6 +41,16 @@ enum evt_type {
     EVT_NAND_SANDISK_CHARGE2        = 0x63,
 };
 
+struct evt_file_header {
+    uint8_t magic1[4];
+    uint32_t version;
+    uint32_t count;
+    uint32_t reserved1;
+    uint32_t reserved2;
+    uint32_t reserved3;
+    uint32_t reserved4;
+} MY_PACK;
+
 struct evt_header {
     uint8_t type;
     uint32_t sec_start, nsec_start;

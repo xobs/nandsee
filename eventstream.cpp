@@ -17,25 +17,24 @@ int EventStream::load(QIODevice &source)
     uint8_t sig[4];
     int32_t size;
     int offset;
+    struct evt_file_header file_header;
 
-    memset(sig, 0, sizeof(sig));
-    if (source.read((char *)sig, sizeof(sig)) != sizeof(sig)) {
-        qDebug() << "Unable to read stream: " << source.errorString();
+    if (source.read((char *)&file_header, sizeof(file_header)) != sizeof(file_header)) {
+        qDebug() << "Unable to read file header: " << source.errorString();
         return -1;
     }
 
-    if (memcmp(sig, EVENT_HDR_1, sizeof(sig))) {
+    if (memcmp(&file_header.magic1, EVENT_HDR_1, sizeof(file_header.magic1))) {
         qDebug() << "Error: File signature doesn't match";
-        qDebug("%x%x%x%x vs %x%x%x%x\n", sig[0], sig[1], sig[2], sig[3],
-                EVENT_HDR_1[0], EVENT_HDR_1[1], EVENT_HDR_1[2], EVENT_HDR_1[3]);
+        qDebug("%x%x%x%x vs %x%x%x%x\n", 
+                file_header.magic1[0], file_header.magic1[1],
+                file_header.magic1[2], file_header.magic1[3],
+                EVENT_HDR_1[0], EVENT_HDR_1[1],
+                EVENT_HDR_1[2], EVENT_HDR_1[3]);
         return -1;
     }
 
-    if (source.read((char *)&size, sizeof(size)) != sizeof(size)) {
-        qDebug() << "Unable to read element count: " << source.errorString();
-        return -1;
-    }
-    size = _ntohl(size);
+    size = _ntohl(file_header.count);
 
 	for (offset=0; offset<size; offset++) {
         uint32_t addr;
