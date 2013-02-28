@@ -181,6 +181,14 @@ void Event::decodeEvent() {
 		memcpy(_data.data(), evt.nand_read.data, _ntohl(evt.nand_read.count));
 		_entropy = getEntropy(_data);
 	}
+
+	if (eventType() == EVT_NAND_PARAMETER_READ) {
+		_data.resize(_ntohs(evt.nand_parameter_read.count));
+		memcpy(_data.data(), evt.nand_parameter_read.data, _ntohs(evt.nand_parameter_read.count));
+		_entropy = getEntropy(_data);
+	}
+
+	_dataAsByteArray.setRawData((char *)&evt, _ntohl(evt.header.size));
 }
 
 uint32_t Event::nanoSecondsStart() const {
@@ -238,7 +246,12 @@ uint8_t Event::helloVersion() const
     return evt.hello.version;
 }
 
-const QString &Event::nandId() const
+uint8_t Event::nandIdAddr() const
+{
+	return evt.nand_id.addr;
+}
+
+const QString &Event::nandIdValue() const
 {
     return nandIdString;
 }
@@ -246,6 +259,31 @@ const QString &Event::nandId() const
 const QByteArray &Event::data() const
 {
 	return _data;
+}
+
+int Event::rawPacketSize() const
+{
+	return _dataAsByteArray.size();
+}
+
+const QByteArray &Event::rawPacket() const
+{
+	return _dataAsByteArray;
+}
+
+uint8_t Event::nandSakdiskParamAddr() const
+{
+	return evt.nand_unk_sandisk_param.addr;
+}
+
+uint8_t Event::nandSandiskParamData() const
+{
+	return evt.nand_unk_sandisk_param.data;
+}
+
+uint8_t Event::nandStatus() const
+{
+	return evt.nand_status.status;
 }
 
 qreal Event::entropy() const
@@ -334,7 +372,7 @@ QDebug operator<<(QDebug dbg, const Event &e)
 			break;
             */
         case EVT_NAND_ID:
-			QTextStream(&message) << "NAND ID: " << e.nandId();
+			QTextStream(&message) << "NAND ID: " << e.nandIdValue();
             break;
 
         case EVT_SD_CMD:

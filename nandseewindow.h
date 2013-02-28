@@ -42,6 +42,7 @@ private:
 
 	void updateEventDetails();
 	void updateHexView();
+	void hideLabels();
 };
 
 #endif // NANDSEEWINDOW_H

@@ -44,47 +44,9 @@ public:
     /* Hello Stream functions */
     uint8_t helloVersion() const;
 
-#if 0
-    /* NAND Command/Data functions */
-	uint8_t nandControl() const;
-	uint8_t nandData() const;
-	uint16_t nandUnknown() const;
-
-    /* Error functions */
-	const QString &errorStr() const;
-	uint32_t errorCode() const;
-	uint32_t errorArgument() const;
-	uint32_t errorSubsystem() const;
-
-    /* SD Command or Data functions */
-	uint8_t sdRegister() const;
-	uint8_t sdValue() const;
-
-	/* SD response */
-	uint8_t sdResponse() const;
-
-	/* Command state */
-	uint8_t commandState() const;
-	const QString &commandName() const;
-	uint32_t commandArg() const;
-
-	/* Hello state */
-	uint8_t helloVersion() const;
-
-	/* Buffer drain started/stopped */
-	uint8_t bufferDrainEvent() const;
-
-	/* Reset event */
-	uint8_t resetVersion() const;
-
-	/* Get CSD */
-	const QString &csd() const;
-
-	/* Get CID */
-	const QString &cid() const;
-#endif
-    /* NAND ID command */
-    const QString &nandId() const;
+	/* NAND ID command */
+	uint8_t nandIdAddr() const;
+	const QString &nandIdValue() const;
 
 	/* NAND Change Read Column or NAND Read */
 	const QByteArray &data() const;
@@ -96,8 +58,20 @@ public:
 	/* If there's data, how random is it? */
 	qreal entropy() const;
 
+	/* Sandisk vendor param */
+	uint8_t nandSakdiskParamAddr() const;
+	uint8_t nandSandiskParamData() const;
+
+	/* NAND Status command */
+	uint8_t nandStatus() const;
+
+	/* Useful for debugging packet parsing */
+	int rawPacketSize() const;
+	const QByteArray &rawPacket() const;
+
 private:
     union evt evt;
+	QByteArray _dataAsByteArray;
 	int eventIndex;
     QString nandIdString;
 	QByteArray _data;

@@ -71,6 +71,7 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 			this, SLOT(exportCurrentView()));
 	connect(ui->exportPageMenuItem, SIGNAL(triggered()),
 			this, SLOT(exportCurrentPage()));
+	hideLabels();
 }
 
 NandSeeWindow::~NandSeeWindow()
@@ -91,10 +92,8 @@ void NandSeeWindow::updateEventDetails()
 	Event e = _eventItemModel->eventAt(mostRecent.row());
 
 	QString temp;
-	temp.sprintf("%d.%09d", (int)e.secondsStart(), (int)e.nanoSecondsStart());
-	ui->startTimeLabel->setText(temp);
-	temp.sprintf("%d.%09d", (int)e.secondsEnd(), (int)e.nanoSecondsEnd());
-	ui->endTimeLabel->setText(temp);
+	ui->startTimeLabel->setText(QString("%1.%2").arg(e.secondsStart()).arg(e.nanoSecondsStart(), 9, 10, QLatin1Char('0')));
+	ui->endTimeLabel->setText(QString("%1.%2").arg(e.secondsEnd()).arg((uint)e.nanoSecondsEnd(), 9, 10, QLatin1Char('0')));
 	int32_t duration_sec = e.secondsEnd() - e.secondsStart();
 	int32_t duration_nsec = e.nanoSecondsEnd() - e.nanoSecondsStart();
 	if (duration_nsec < 0) {
@@ -131,6 +130,60 @@ void NandSeeWindow::updateEventDetails()
 
 	ui->entropyLabel->setText(QString::number(e.entropy()));
 	ui->indexLabel->setText(QString::number(mostRecent.row()));
+
+	hideLabels();
+
+	QString rawPacketHex = "";
+	for (unsigned int i=0; i<sizeof(evt_header); i++) {
+		if (i>0)
+			rawPacketHex += " ";
+		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
+	}
+	ui->rawPacketHeader->setText(rawPacketHex);
+
+
+	rawPacketHex = "";
+	for (unsigned int i=sizeof(evt_header); i<e.rawPacketSize(); i++) {
+		if (i>sizeof(evt_header))
+			rawPacketHex += " ";
+		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
+	}
+	ui->rawPacketView->clear();
+	ui->rawPacketView->appendPlainText(rawPacketHex);
+	ui->rawPacketView->verticalScrollBar()->setValue(0);
+
+	if (e.eventType() == EVT_NAND_ID) {
+		ui->attributeLine->setVisible(true);
+
+		ui->attribute1Label->setText("NAND ID Address:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(QString::number(e.nandIdAddr(), 16));
+		ui->attribute1Value->setVisible(true);
+
+		ui->attribute2Label->setText("NAND ID:");
+		ui->attribute2Label->setVisible(true);
+		ui->attribute2Value->setText(e.nandIdValue());
+		ui->attribute2Value->setVisible(true);
+	}
+	else if (e.eventType() == EVT_NAND_SANDISK_VENDOR_PARAM) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("Sandisk Address:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(QString::number(e.nandSakdiskParamAddr(), 16));
+		ui->attribute1Value->setVisible(true);
+
+		ui->attribute2Label->setText("Sandisk Value:");
+		ui->attribute2Label->setVisible(true);
+		ui->attribute2Value->setText(QString::number(e.nandSandiskParamData(), 16));
+		ui->attribute2Value->setVisible(true);
+	}
+	else if (e.eventType() == EVT_NAND_STATUS) {
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("NAND Status:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(QString::number(e.nandStatus(), 16));
+		ui->attribute1Value->setVisible(true);
+	}
 }
 
 void NandSeeWindow::updateHexView()
@@ -173,6 +226,15 @@ void NandSeeWindow::updateHexView()
 		ui->dataSizeLabel->setText(QString::number(currentData.size()));
 	else
 		ui->dataSizeLabel->setText("-");
+}
+
+void NandSeeWindow::hideLabels()
+{
+	ui->attributeLine->setVisible(false);
+	ui->attribute1Label->setVisible(false);
+	ui->attribute1Value->setVisible(false);
+	ui->attribute2Label->setVisible(false);
+	ui->attribute2Value->setVisible(false);
 }
 
 void NandSeeWindow::changeLastSelected(const QModelIndex &index, const QModelIndex &old)
