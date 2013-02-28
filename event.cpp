@@ -8,7 +8,7 @@ static QList<QString> eventTypes;
 
 static qreal getEntropy(QByteArray &data)
 {
-	if (!data.size())
+	if (data.size() <= 2)
 		return 1;
 	QByteArray smaller = qCompress(data, 9);
 	qreal ratio = (smaller.size()*1.0)/(data.size()*1.0);
@@ -216,6 +216,19 @@ void Event::decodeEvent() {
 		}
 	}
 
+	_sdArgs = "";
+	if (eventType() == EVT_SD_CMD) {
+		_sdArgs = "";
+		for (int i=0; i<_ntohl(evt.sd_cmd.num_args); i++) {
+			if (i>0)
+				_sdArgs += " ";
+			_sdArgs += QString("%1").arg(evt.sd_cmd.args[i], 2, 16, QChar('0'));
+		}
+		_data.resize(_ntohl(evt.sd_cmd.num_results));
+		memcpy(_data.data(), evt.sd_cmd.result, _ntohl(evt.sd_cmd.num_results));
+		_entropy = getEntropy(_data);
+	}
+
 	_dataAsByteArray.setRawData((char *)&evt, _ntohl(evt.header.size));
 }
 
@@ -332,6 +345,21 @@ const QString &Event::nandReadAddr() const
 const QString &Event::nandChangeReadColumnAddr() const
 {
 	return _nandReadColumnAddr;
+}
+
+uint8_t Event::sdCmdCMD() const
+{
+	return evt.sd_cmd.cmd & 0x3f;
+}
+
+bool Event::sdCmdIsACMD() const
+{
+	return evt.sd_cmd.cmd&0x80;
+}
+
+const QString &Event::sdCmdArgs() const
+{
+	return _sdArgs;
 }
 
 qreal Event::entropy() const

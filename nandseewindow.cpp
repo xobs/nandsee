@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QString>
 #include <QCoreApplication>
+#include <QScrollBar>
 
 #include "nandseewindow.h"
 #include "eventitemmodel.h"
@@ -231,6 +232,24 @@ void NandSeeWindow::updateEventDetails()
 		ui->attribute1Label->setVisible(true);
 		ui->attribute1Value->setText(e.nandChangeReadColumnAddr());
 		ui->attribute1Value->setVisible(true);
+	}
+	if (e.eventType() == EVT_SD_CMD) {
+		ui->attributeLine->setVisible(true);
+
+		if (e.sdCmdIsACMD())
+			ui->attribute1Label->setText(QString("ACMD%1 Args:").arg(e.sdCmdCMD()));
+		else
+			ui->attribute1Label->setText(QString("CMD%1 Args:").arg(e.sdCmdCMD()));
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(e.sdCmdArgs());
+		ui->attribute1Value->setVisible(true);
+
+		if (e.data().size() == 1) {
+			ui->attribute2Label->setText("Response:");
+			ui->attribute2Label->setVisible(true);
+			ui->attribute2Value->setText(QString::number(e.data().at(0), 16));
+			ui->attribute2Value->setVisible(true);
+		}
 	}
 }
 

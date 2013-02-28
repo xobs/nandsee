@@ -77,6 +77,11 @@ public:
 	/* Misc. Sandisk commands */
 	const QString &nandSandiskChargeAddr() const;
 
+	/* SD Commands */
+	bool sdCmdIsACMD() const;
+	uint8_t sdCmdCMD() const;
+	const QString &sdCmdArgs() const;
+
 private:
     union evt evt;
 	QByteArray _dataAsByteArray;
@@ -87,6 +92,7 @@ private:
 	QString _sandiskChargeAddr;
 	QString _nandReadAddr;
 	QString _nandReadColumnAddr;
+	QString _sdArgs;
 	double _entropy;
 
 signals:
