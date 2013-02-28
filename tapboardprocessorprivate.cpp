@@ -67,8 +67,8 @@ int packet_write(struct state *st, struct pkt *pkt) {
 	struct pkt cp;
 	QFile *out_fd = (QFile *)st->out_fdh;
 	memcpy(&cp, pkt, sizeof(cp));
-	cp.header.sec = htonl(pkt->header.sec);
-	cp.header.nsec = htonl(pkt->header.nsec);
+	cp.header.sec = _htonl(pkt->header.sec);
+	cp.header.nsec = _htonl(pkt->header.nsec);
 	cp.header.size = _htons(pkt->header.size);
 
 	return out_fd->write((char *)&cp, _ntohs(cp.header.size));
@@ -121,11 +121,11 @@ int event_unget(struct state *st, union evt *evt) {
 int event_write(struct state *st, union evt *evt) {
 	int ret;
 	QFile *out_fdh = (QFile *)st->out_fdh;
-	evt->header.sec_start = htonl(evt->header.sec_start);
-	evt->header.nsec_start = htonl(evt->header.nsec_start);
-	evt->header.sec_end = htonl(evt->header.sec_end);
-	evt->header.nsec_end = htonl(evt->header.nsec_end);
-	evt->header.size = htonl(evt->header.size);
+	evt->header.sec_start = _htonl(evt->header.sec_start);
+	evt->header.nsec_start = _htonl(evt->header.nsec_start);
+	evt->header.sec_end = _htonl(evt->header.sec_end);
+	evt->header.nsec_end = _htonl(evt->header.nsec_end);
+	evt->header.size = _htonl(evt->header.size);
 
 	ret = out_fdh->write((char *)evt, _ntohl(evt->header.size));
 

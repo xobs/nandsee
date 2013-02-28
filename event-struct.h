@@ -8,6 +8,8 @@
 struct state;
 struct pkt;
 
+#pragma pack(1)
+
 enum evt_type {
     EVT_HELLO,
     EVT_SD_CMD,

@@ -14,6 +14,8 @@ static const char *EVENT_HDR_2 = "MaDa";
 #define SKIP_AMOUNT 80
 #define SEARCH_LIMIT 20
 
+static struct state *g_st;
+
 enum prog_state {
     ST_UNINITIALIZED,
     ST_DONE,
@@ -41,8 +43,8 @@ static uint32_t hdrs[16777216];
 static int hdr_count;
 
 
-int compare_event_addrs(void *thunk, const void *a1, const void *a2) {
-	struct state *st = (struct state *)thunk;
+int compare_event_addrs(const void *a1, const void *a2) {
+	struct state *st = g_st;
 	const uint32_t *o1 = (uint32_t *)a1;
 	const uint32_t *o2 = (uint32_t *)a2;
 	union evt e1, e2;
@@ -129,7 +131,8 @@ static int st_scanning(struct state *st) {
 }
 
 static int st_grouping(struct state *st) {
-    qsort_r(hdrs, hdr_count, sizeof(*hdrs), st, compare_event_addrs);
+    g_st = st;
+    qsort(hdrs, hdr_count, sizeof(*hdrs), compare_event_addrs);
     sstate_set(st, ST_WRITE);
     return 0;
 }

@@ -37,7 +37,7 @@ int EventStream::load(QIODevice &source)
     }
     size = _ntohl(size);
 
-    for (offset=0; offset<size; offset++) {
+	for (offset=0; offset<size; offset++) {
         uint32_t addr;
         if (source.read((char *)&addr, sizeof(addr)) != sizeof(addr)) {
             qDebug() << "Unable to read addr table: " << source.errorString();
@@ -47,7 +47,7 @@ int EventStream::load(QIODevice &source)
         _offsets.append(addr);
     }
     
-    if (source.read((char *)sig, sizeof(sig)) != sizeof(sig)) {
+	if (source.read((char *)sig, sizeof(sig)) != sizeof(sig)) {
         qDebug() << "Unable to read stream: " << source.errorString();
         return -1;
     }
