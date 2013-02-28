@@ -52,8 +52,10 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>false</bool>
+    <bool>true</bool>
    </attribute>
+   <addaction name="separator"/>
+   <addaction name="actionAction"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="eventListDock">
@@ -272,6 +274,11 @@
    </property>
    <property name="text">
     <string>Utilities</string>
+   </property>
+  </action>
+  <action name="actionAction">
+   <property name="text">
+    <string>Action!</string>
    </property>
   </action>
  </widget>
