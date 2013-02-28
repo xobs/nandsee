@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <QDebug>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -751,23 +752,28 @@ static int st_scanning(struct state *st) {
             }
 
             // Ignore args for CMD55
-            if ((evt->num_args || sd->reg>0) && evt->cmd != 0x55) {
+            if ((evt->num_args || sd->reg>0) && evt->cmd != (55|0x80)) {
                 evt->args[evt->num_args++] = sd->val;
             }
 
             // Register 0 implies this is a CMD.
             else if (sd->reg == 0) {
-                if (evt->cmd == 0x55)
+                if ((sd->val&0x3f) == 55 || evt->cmd&0x80) {
+                    qDebug() << "CMD 55";
                     evt->cmd = 0x80 | (0x3f & sd->val);
-                else
+                }
+                else {
+                    qDebug() << "SD code:" << (0x3f&sd->val);
                     evt->cmd = 0x3f & sd->val;
+                }
             }
             evt_put(st, evt);
         }
         else if (pkt.header.type == PACKET_SD_RESPONSE) {
 			struct evt_sd_cmd *evt = (struct evt_sd_cmd *)evt_take(st, EVT_SD_CMD);
             // Ignore CMD17, as we'll pick it up on the PACKET_SD_DATA packet
-            if (evt->cmd == 17) {
+            // Also ignore CMD55, as it'll become an ACMD later on
+            if (evt->cmd == 17 || evt->cmd == (55|0x80)) {
                 evt_put(st, evt);
             }
             else {
