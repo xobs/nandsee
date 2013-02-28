@@ -81,7 +81,17 @@ void NandSeeWindow::updateEventDetails()
 		duration_sec--;
 		duration_nsec += 1000000000;
 	}
-	temp.sprintf("%d.%09d", duration_sec, duration_nsec);
+	temp.sprintf("%d.%09d (", duration_sec, duration_nsec);
+	if (duration_sec > 0)
+		temp += QString("%1 sec, ").arg(QString::number(duration_sec));
+
+	if (duration_nsec > 1000000)
+		temp += QString("%1 msec").arg(QString::number((duration_nsec-duration_nsec%1000000)/1000000));
+	else if(duration_nsec > 1000)
+		temp += QString("%1 %2sec").arg(QString::number((duration_nsec-duration_nsec%1000)/1000)).arg(QString::fromUtf8("µ"));
+	else
+		temp += QString("%1 nsec").arg(QString::number(duration_nsec));
+	temp += ")";
 	ui->durationLabel->setText(temp);
 
 	temp = e.eventTypeStr();
