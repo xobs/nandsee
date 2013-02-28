@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     nand.cpp \
     joiner.cpp \
     grouper.cpp \
-    sorter.cpp
+    sorter.cpp \
+    byteswap.cpp
 
 HEADERS  += nandseewindow.h \
     nandview.h \
@@ -42,7 +43,8 @@ HEADERS  += nandseewindow.h \
     tapboardprocessor.h \
     state.h \
     packet-struct.h \
-    tapboardprocessorprivate.h
+    tapboardprocessorprivate.h \
+    byteswap.h
 
 FORMS    += nandseewindow.ui \
     hexwindow.ui

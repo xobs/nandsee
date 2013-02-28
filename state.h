@@ -5,9 +5,10 @@
 
 struct pkt;
 
+class QFile;
 struct state {
-    int fd;
-    int out_fd;
+	QFile *fdh;
+	QFile *out_fdh;
     int st;
 
     int skip_counter;

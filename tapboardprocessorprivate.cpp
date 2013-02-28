@@ -5,6 +5,7 @@
 #include "state.h"
 #include "packet-struct.h"
 #include "event-struct.h"
+#include "byteswap.h"
 
 struct state;
 
@@ -25,18 +26,19 @@ int sstate_free(struct state **st);
 
 int packet_get_next_raw(struct state *st, struct pkt *pkt) {
 	int ret;
+	QFile *fd = (QFile *)st->fdh;
 
-	ret = read(st->fd, &pkt->header, sizeof(pkt->header));
+	ret = fd->read((char *) &pkt->header, sizeof(pkt->header));
 	if (ret < 0)
 		return -1;
 
 	if (ret == 0)
 		return -2;
-	pkt->header.sec = ntohl(pkt->header.sec);
-	pkt->header.nsec = ntohl(pkt->header.nsec);
-	pkt->header.size = ntohs(pkt->header.size);
+	pkt->header.sec = _ntohl(pkt->header.sec);
+	pkt->header.nsec = _ntohl(pkt->header.nsec);
+	pkt->header.size = _ntohs(pkt->header.size);
 
-	ret = read(st->fd, &pkt->data, pkt->header.size-sizeof(pkt->header));
+	ret = fd->read((char *)&pkt->data, pkt->header.size-sizeof(pkt->header));
 	if (ret < 0)
 		return -1;
 
@@ -57,24 +59,27 @@ int packet_get_next(struct state *st, struct pkt *pkt) {
 }
 
 int packet_unget(struct state *st, struct pkt *pkt) {
-	return lseek(st->fd, -pkt->header.size, SEEK_CUR);
+	QFile *fdh = (QFile *)st->fdh;
+	return fdh->seek(fdh->pos()-pkt->header.size);
 }
 
 int packet_write(struct state *st, struct pkt *pkt) {
 	struct pkt cp;
+	QFile *out_fd = (QFile *)st->out_fdh;
 	memcpy(&cp, pkt, sizeof(cp));
 	cp.header.sec = htonl(pkt->header.sec);
 	cp.header.nsec = htonl(pkt->header.nsec);
-	cp.header.size = htons(pkt->header.size);
+	cp.header.size = _htons(pkt->header.size);
 
-	return write(st->out_fd, &cp, ntohs(cp.header.size));
+	return out_fd->write((char *)&cp, _ntohs(cp.header.size));
 }
 
 int event_get_next(struct state *st, union evt *evt) {
 	int ret;
 	int bytes_to_read;
+	QFile *fd = (QFile *)st->fdh;
 
-	ret = read(st->fd, &evt->header, sizeof(evt->header));
+	ret = fd->read((char *)&evt->header, sizeof(evt->header));
 	if (ret < 0) {
 		perror("Couldn't read header");
 		return -1;
@@ -84,14 +89,14 @@ int event_get_next(struct state *st, union evt *evt) {
 		perror("End of file for header");
 		return -2;
 	}
-	evt->header.sec_start = ntohl(evt->header.sec_start);
-	evt->header.nsec_start = ntohl(evt->header.nsec_start);
-	evt->header.sec_end = ntohl(evt->header.sec_end);
-	evt->header.nsec_end = ntohl(evt->header.nsec_end);
-	evt->header.size = ntohl(evt->header.size);
+	evt->header.sec_start = _ntohl(evt->header.sec_start);
+	evt->header.nsec_start = _ntohl(evt->header.nsec_start);
+	evt->header.sec_end = _ntohl(evt->header.sec_end);
+	evt->header.nsec_end = _ntohl(evt->header.nsec_end);
+	evt->header.size = _ntohl(evt->header.size);
 
 	bytes_to_read = evt->header.size - sizeof(evt->header);
-	ret = read(st->fd,
+	ret = fd->read(
 			   ((char *)&(evt->header)) + sizeof(evt->header),
 			   bytes_to_read);
 
@@ -109,23 +114,26 @@ int event_get_next(struct state *st, union evt *evt) {
 }
 
 int event_unget(struct state *st, union evt *evt) {
-	return lseek(st->fd, -evt->header.size, SEEK_CUR);
+	QFile *fdh = (QFile *)st->fdh;
+	return fdh->seek(fdh->pos()-evt->header.size);
 }
 
 int event_write(struct state *st, union evt *evt) {
 	int ret;
+	QFile *out_fdh = (QFile *)st->out_fdh;
 	evt->header.sec_start = htonl(evt->header.sec_start);
 	evt->header.nsec_start = htonl(evt->header.nsec_start);
 	evt->header.sec_end = htonl(evt->header.sec_end);
 	evt->header.nsec_end = htonl(evt->header.nsec_end);
 	evt->header.size = htonl(evt->header.size);
-	ret = write(st->out_fd, evt, ntohl(evt->header.size));
 
-	evt->header.sec_start = ntohl(evt->header.sec_start);
-	evt->header.nsec_start = ntohl(evt->header.nsec_start);
-	evt->header.sec_end = ntohl(evt->header.sec_end);
-	evt->header.nsec_end = ntohl(evt->header.nsec_end);
-	evt->header.size = ntohl(evt->header.size);
+	ret = out_fdh->write((char *)evt, _ntohl(evt->header.size));
+
+	evt->header.sec_start = _ntohl(evt->header.sec_start);
+	evt->header.nsec_start = _ntohl(evt->header.nsec_start);
+	evt->header.sec_end = _ntohl(evt->header.sec_end);
+	evt->header.nsec_end = _ntohl(evt->header.nsec_end);
+	evt->header.size = _ntohl(evt->header.size);
 
 	return ret;
 }
@@ -177,8 +185,8 @@ int TapboardProcessorPrivate::joinFile()
         return -1;
     }
     struct state *js = jstate_init();
-    js->fd = rawFile->handle();
-    js->out_fd = joinedFile->handle();
+	js->fdh = rawFile;
+	js->out_fdh = joinedFile;
     while (jstate_state(js) != 1 && !ret)
         ret = jstate_run(js);
     jstate_free(&js);
@@ -200,8 +208,8 @@ int TapboardProcessorPrivate::groupFile()
         return -1;
     }
     struct state *gs = gstate_init();
-    gs->fd = joinedFile->handle();
-    gs->out_fd = groupedFile->handle();
+	gs->fdh = joinedFile;
+	gs->out_fdh = groupedFile;
     while (gstate_state(gs) != 1 && !ret)
         ret = gstate_run(gs);
     gstate_free(&gs);
@@ -224,8 +232,8 @@ int TapboardProcessorPrivate::sortFile()
         return -1;
     }
     struct state *ss = sstate_init();
-    ss->fd = groupedFile->handle();
-    ss->out_fd = sortedFile->handle();
+	ss->fdh = groupedFile;
+	ss->out_fdh = sortedFile;
     while (sstate_state(ss) != 1 && !ret)
         ret = sstate_run(ss);
     sstate_free(&ss);

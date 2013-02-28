@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <QFile>
 #include "packet-struct.h"
 #include "state.h"
 
@@ -153,7 +154,7 @@ static int st_searching(struct state *st) {
         // here later on.
         else if (is_ib_command(st, &pkt)) {
             packet_get_next_raw(st, &pkt);
-            st->last_run_offset = lseek(st->fd, 0, SEEK_CUR);
+			st->last_run_offset = st->fdh->pos();
         }
     }
 
@@ -173,7 +174,7 @@ static int st_backtrack(struct state *st) {
     int ret;
     int before_nand = 1;
     
-    ret = lseek(st->fd, st->last_run_offset, SEEK_SET);
+	ret = st->fdh->seek(st->last_run_offset);
     if (-1 == ret) {
         perror("Unable to backtrack");
     }
@@ -190,7 +191,7 @@ static int st_backtrack(struct state *st) {
                 packet_write(st, &pkt);
             }
             jstate_set(st, ST_SEARCHING);
-            st->last_run_offset = lseek(st->fd, 0, SEEK_CUR);
+			st->last_run_offset = st->fdh->pos();
             break;
         }
 

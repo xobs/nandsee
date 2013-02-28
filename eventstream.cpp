@@ -1,5 +1,6 @@
 #include <QDebug>
 #include "eventstream.h"
+#include "byteswap.h"
 
 static const char *EVENT_HDR_1 = "TBEv";
 static const char *EVENT_HDR_2 = "MaDa";
@@ -34,7 +35,7 @@ int EventStream::load(QIODevice &source)
         qDebug() << "Unable to read element count: " << source.errorString();
         return -1;
     }
-    size = ntohl(size);
+    size = _ntohl(size);
 
     for (offset=0; offset<size; offset++) {
         uint32_t addr;
@@ -42,7 +43,7 @@ int EventStream::load(QIODevice &source)
             qDebug() << "Unable to read addr table: " << source.errorString();
             return -1;
         }
-        addr = ntohl(addr);
+        addr = _ntohl(addr);
         _offsets.append(addr);
     }
     

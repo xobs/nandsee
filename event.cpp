@@ -1,7 +1,7 @@
-#include <arpa/inet.h>
 #include <QDebug>
 #include <QTextStream>
 #include "event.h"
+#include "byteswap.h"
 
 static QList<QString> eventTypes;
 
@@ -102,13 +102,13 @@ Event::Event(QIODevice &source, QObject *parent) :
 	if (bytesRead != sizeof(evt.header)) {
 		qDebug() << "Read an unexpected number of bytes:" << bytesRead << "vs" << sizeof(evt.header);
 	}
-	if (ntohl(evt.header.size) > sizeof(evt)) {
-		qDebug() << "Header size is VERY wrong:" << ntohl(evt.header.size);
+	if (_ntohl(evt.header.size) > sizeof(evt)) {
+		qDebug() << "Header size is VERY wrong:" << _ntohl(evt.header.size);
 	}
 
 	bytesRead = streamReadData(source,
                                ((char *)(&evt.header)) + sizeof(evt.header),
-                               ntohl(evt.header.size) - sizeof(evt.header));
+                               _ntohl(evt.header.size) - sizeof(evt.header));
 	decodeEvent();
 }
 
@@ -171,36 +171,36 @@ void Event::decodeEvent() {
     }
 
 	if (eventType() == EVT_NAND_CHANGE_READ_COLUMN) {
-		_data.resize(ntohl(evt.nand_change_read_coumn.count));
-		memcpy(_data.data(), evt.nand_change_read_coumn.data, ntohl(evt.nand_change_read_coumn.count));
+		_data.resize(_ntohl(evt.nand_change_read_coumn.count));
+		memcpy(_data.data(), evt.nand_change_read_coumn.data, _ntohl(evt.nand_change_read_coumn.count));
 		_entropy = getEntropy(_data);
 	}
 
 	if (eventType() == EVT_NAND_READ) {
-		_data.resize(ntohl(evt.nand_read.count));
-		memcpy(_data.data(), evt.nand_read.data, ntohl(evt.nand_read.count));
+		_data.resize(_ntohl(evt.nand_read.count));
+		memcpy(_data.data(), evt.nand_read.data, _ntohl(evt.nand_read.count));
 		_entropy = getEntropy(_data);
 	}
 }
 
 uint32_t Event::nanoSecondsStart() const {
-	return ntohl(evt.header.nsec_start);
+	return _ntohl(evt.header.nsec_start);
 }
 
 uint32_t Event::secondsStart() const {
-	return ntohl(evt.header.sec_start);
+	return _ntohl(evt.header.sec_start);
 }
 
 uint32_t Event::nanoSecondsEnd() const {
-	return ntohl(evt.header.nsec_end);
+	return _ntohl(evt.header.nsec_end);
 }
 
 uint32_t Event::secondsEnd() const {
-	return ntohl(evt.header.sec_end);
+	return _ntohl(evt.header.sec_end);
 }
 
 uint32_t Event::eventSize() const {
-	return ntohl(evt.header.size);
+	return _ntohl(evt.header.size);
 }
 
 enum evt_type Event::eventType() const {

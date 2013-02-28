@@ -4,30 +4,14 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
-#include <arpa/inet.h>
+#include <QFile>
 #include "packet-struct.h"
 #include "event-struct.h"
 #include "state.h"
+#include "byteswap.h"
 
 #define SKIP_AMOUNT 80
 #define SEARCH_LIMIT 20
-
-static char *types[] = {
-        "PACKET_UNKNOWN",
-        "PACKET_ERROR",
-        "PACKET_NAND_CYCLE",
-        "PACKET_SD_DATA",
-        "PACKET_SD_CMD_ARG",
-        "PACKET_SD_RESPONSE",
-        "PACKET_SD_CID",
-        "PACKET_SD_CSD",
-        "PACKET_BUFFER_OFFSET",
-        "PACKET_BUFFER_CONTENTS",
-        "PACKET_COMMAND",
-        "PACKET_RESET",
-        "PACKET_BUFFER_DRAIN",
-        "PACKET_HELLO",
-};
 
 enum prog_state {
     ST_UNINITIALIZED,
@@ -54,17 +38,17 @@ static int evt_fill_header(void *arg, uint32_t sec_start, uint32_t nsec_start,
                     uint32_t size, uint8_t type) {
 	struct evt_header *hdr = (struct evt_header *)arg;
     memset(hdr, 0, sizeof(*hdr));
-    hdr->sec_start = htonl(sec_start);
-    hdr->nsec_start = htonl(nsec_start);
-    hdr->size = htonl(size);
+    hdr->sec_start = _htonl(sec_start);
+    hdr->nsec_start = _htonl(nsec_start);
+    hdr->size = _htonl(size);
     hdr->type = type;
     return 0;
 }
 
 static int evt_fill_end(void *arg, uint32_t sec_end, uint32_t nsec_end) {
 	struct evt_header *hdr = (struct evt_header *)arg;
-	hdr->sec_end = htonl(sec_end);
-    hdr->nsec_end = htonl(nsec_end);
+	hdr->sec_end = _htonl(sec_end);
+    hdr->nsec_end = _htonl(nsec_end);
     return 0;
 }
 
@@ -74,11 +58,11 @@ static int evt_write_hello(struct state *st, struct pkt *pkt) {
     evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
                     sizeof(evt), EVT_HELLO);
     evt.version = pkt->data.hello.version;
-    evt.magic1 = htonl(EVENT_MAGIC_1);
-    evt.magic2 = htonl(EVENT_MAGIC_2);
+    evt.magic1 = _htonl(EVENT_MAGIC_1);
+    evt.magic2 = _htonl(EVENT_MAGIC_2);
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -88,8 +72,8 @@ static int evt_write_reset(struct state *st, struct pkt *pkt) {
                     sizeof(evt), EVT_RESET);
     evt.version = pkt->data.reset.version;
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 static int evt_write_nand_unk(struct state *st, struct pkt *pkt) {
@@ -100,8 +84,8 @@ static int evt_write_nand_unk(struct state *st, struct pkt *pkt) {
     evt.ctrl = pkt->data.nand_cycle.control;
     evt.unknown = pkt->data.nand_cycle.unknown;
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 static int evt_write_id(struct state *st, struct pkt *pkt) {
@@ -132,8 +116,8 @@ static int evt_write_id(struct state *st, struct pkt *pkt) {
         packet_unget(st, pkt);
 
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 static int evt_write_sandisk_set(struct state *st, struct pkt *pkt) {
@@ -153,8 +137,8 @@ static int evt_write_sandisk_set(struct state *st, struct pkt *pkt) {
     }
 
     evt_fill_end(&evt, second_pkt.header.sec, second_pkt.header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 static int evt_write_sandisk_param(struct state *st, struct pkt *pkt) {
@@ -188,8 +172,8 @@ static int evt_write_sandisk_param(struct state *st, struct pkt *pkt) {
     evt.data = third_pkt.data.nand_cycle.data;
 
     evt_fill_end(&evt, third_pkt.header.sec, third_pkt.header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -238,8 +222,8 @@ static int evt_write_sandisk_charge1(struct state *st, struct pkt *pkt) {
     evt.addr[2] = fourth_pkt.data.nand_cycle.data;
 
     evt_fill_end(&evt, fourth_pkt.header.sec, fourth_pkt.header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -288,8 +272,8 @@ static int evt_write_sandisk_charge2(struct state *st, struct pkt *pkt) {
     evt.addr[2] = fourth_pkt.data.nand_cycle.data;
 
     evt_fill_end(&evt, fourth_pkt.header.sec, fourth_pkt.header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -310,8 +294,8 @@ static int evt_write_nand_reset(struct state *st, struct pkt *pkt) {
     }
 
     evt_fill_end(&evt, second_pkt.header.sec, second_pkt.header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -320,8 +304,8 @@ static int evt_write_nand_cache1(struct state *st, struct pkt *pkt) {
     evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
                     sizeof(evt), EVT_NAND_CACHE1);
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -330,8 +314,8 @@ static int evt_write_nand_cache2(struct state *st, struct pkt *pkt) {
     evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
                     sizeof(evt), EVT_NAND_CACHE2);
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -340,8 +324,8 @@ static int evt_write_nand_cache3(struct state *st, struct pkt *pkt) {
     evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
                     sizeof(evt), EVT_NAND_CACHE3);
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -350,8 +334,8 @@ static int evt_write_nand_cache4(struct state *st, struct pkt *pkt) {
     evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
                     sizeof(evt), EVT_NAND_CACHE4);
     evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -375,8 +359,8 @@ static int evt_write_nand_status(struct state *st, struct pkt *pkt) {
     evt.status = second_pkt.data.nand_cycle.data;
 
     evt_fill_end(&evt, second_pkt.header.sec, second_pkt.header.nsec);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -414,8 +398,8 @@ static int evt_write_nand_parameter_page(struct state *st, struct pkt *pkt) {
     }
     packet_unget(st, pkt);
 
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -476,9 +460,9 @@ static int evt_write_nand_change_read_column(struct state *st, struct pkt *pkt) 
     }
     packet_unget(st, pkt);
 
-    evt.count = htonl(evt.count);
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+    evt.count = _htonl(evt.count);
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -539,10 +523,10 @@ static int evt_write_nand_read(struct state *st, struct pkt *pkt) {
     }
     packet_unget(st, pkt);
 
-    evt.count = htonl(evt.count);
+    evt.count = _htonl(evt.count);
 
-    write(st->out_fd, &evt, sizeof(evt));
-    return 0;
+	st->out_fdh->write((char *)&evt, sizeof(evt));
+	return 0;
 }
 
 
@@ -698,14 +682,14 @@ static int st_scanning(struct state *st) {
                     evt.cmd[1] = pkt.data.command.cmd[1];
                     evt.arg = pkt.data.command.arg;
                     evt_fill_end(&evt, pkt.header.sec, pkt.header.nsec);
-                    evt.arg = htonl(evt.arg);
-                    write(st->out_fd, &evt, sizeof(evt));
-                }
+                    evt.arg = _htonl(evt.arg);
+					st->out_fdh->write((char *)&evt, sizeof(evt));
+				}
                 else {
                     evt_fill_end(net, pkt.header.sec, pkt.header.nsec);
-                    net->arg = htonl(net->arg);
-                    write(st->out_fd, net, sizeof(*net));
-                    free(net);
+                    net->arg = _htonl(net->arg);
+					st->out_fdh->write((char *)net, sizeof(*net));
+					free(net);
                 }
             }
             else {
@@ -734,11 +718,11 @@ static int st_scanning(struct state *st) {
                     evt_fill_header(&evt, pkt.header.sec, pkt.header.nsec,
                                     sizeof(evt), EVT_BUFFER_DRAIN);
                     evt_fill_end(&evt, pkt.header.sec, pkt.header.nsec);
-                    write(st->out_fd, &evt, sizeof(evt));
+					st->out_fdh->write((char *)&evt, sizeof(evt));
                 }
                 else {
                     evt_fill_end(evt, pkt.header.sec, pkt.header.nsec);
-                    write(st->out_fd, evt, sizeof(*evt));
+					st->out_fdh->write((char *)evt, sizeof(*evt));
                     free(evt);
                 }
             }
@@ -794,11 +778,11 @@ static int st_scanning(struct state *st) {
                 }
 
                 evt->result[evt->num_results++] = sd->byte;
-                evt->num_results = htonl(evt->num_results);
-                evt->num_args = htonl(evt->num_args);
+                evt->num_results = _htonl(evt->num_results);
+                evt->num_args = _htonl(evt->num_args);
 
                 evt_fill_end(evt, pkt.header.sec, pkt.header.nsec);
-                write(st->out_fd, evt, sizeof(*evt));
+				st->out_fdh->write((char *)evt, sizeof(*evt));
                 free(evt);
             }
         }
@@ -815,15 +799,15 @@ static int st_scanning(struct state *st) {
             for (offset=0; offset<sizeof(sd->data); offset++)
                 evt->result[evt->num_results++] = sd->data[offset];
 
-            evt->num_results = htonl(evt->num_results);
-            evt->num_args = htonl(evt->num_args);
+            evt->num_results = _htonl(evt->num_results);
+            evt->num_args = _htonl(evt->num_args);
             evt_fill_end(evt, pkt.header.sec, pkt.header.nsec);
-            write(st->out_fd, evt, sizeof(*evt));
+			st->out_fdh->write((char *)evt, sizeof(*evt));
             free(evt);
         }
 
         else {
-            printf("Unknown packet type: %s\n", types[pkt.header.type]);
+			printf("Unknown packet type: %d\n", pkt.header.type);
         }
     }
 
@@ -839,29 +823,3 @@ static int st_done(struct state *st) {
     return 0;
 }
 
-
-#if 0
-int main(int argc, char **argv) {
-    struct state state;
-    int ret;
-
-    memset(&state, 0, sizeof(state));
-
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s [in_filename] [out_filename]\n", argv[0]);
-        return 1;
-    }
-
-    ret = open_files(&state, argv[1], argv[2]);
-    if (ret)
-        return ret;
-
-    gstate_init(&state);
-    while (gstate_state(&state) != ST_DONE && !ret)
-        ret = gstate_run(&state);
-    printf("State machine finished with result: %d\n", ret);
-
-    return 0;
-}
-
-#endif
