@@ -24,6 +24,8 @@ public:
 private:
 	EventStream _events;
     EventStream _currentEvents;
+	QVariant drawEntropyBackground(const Event &e) const;
+	QVariant drawNandUnknownBackground(const Event &e) const;
 
 signals:
 	
