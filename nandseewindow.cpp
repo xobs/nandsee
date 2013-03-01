@@ -11,6 +11,7 @@
 #include "hexwindow.h"
 #include "ui_nandseewindow.h"
 #include "tapboardprocessor.h"
+#include "nand.h"
 
 NandSeeWindow::NandSeeWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -250,6 +251,30 @@ void NandSeeWindow::updateEventDetails()
 			ui->attribute2Value->setText(QString::number(e.data().at(0), 16));
 			ui->attribute2Value->setVisible(true);
 		}
+	}
+
+	if (e.eventType() == EVT_NAND_UNKNOWN) {
+		QStringList nandFlags;
+		if (nand_ale(e.nandUnknownControl()))
+			nandFlags.append("ALE");
+		if (nand_cle(e.nandUnknownControl()))
+			nandFlags.append("CLE");
+		if (nand_we(e.nandUnknownControl()))
+			nandFlags.append("WE");
+		if (nand_re(e.nandUnknownControl()))
+			nandFlags.append("RE");
+		if (nand_rb(e.nandUnknownControl()))
+			nandFlags.append("RB");
+		ui->attributeLine->setVisible(true);
+		ui->attribute1Label->setText("NAND Flags:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(nandFlags.join(" "));
+		ui->attribute1Value->setVisible(true);
+
+		ui->attribute2Label->setText("NAND Data:");
+		ui->attribute2Label->setVisible(true);
+		ui->attribute2Value->setText(QString::number(e.nandUnknownData(), 16));
+		ui->attribute2Value->setVisible(true);
 	}
 }
 
