@@ -7,6 +7,7 @@ namespace Ui {
 class HexWindow;
 }
 
+class HexWindow;
 class HexWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -18,6 +19,9 @@ public:
 
 public slots:
 	void closeWindow();
+
+signals:
+    void closeHexWindow(HexWindow *me);
 
 private:
 	QByteArray _data;

@@ -11,6 +11,7 @@ class NandSeeWindow;
 
 class EventItemModel;
 
+class HexWindow;
 class NandSeeWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -31,6 +32,8 @@ public slots:
 
     void ignoreEvents();
     void unignoreEvents();
+
+    void closeHexWindow(HexWindow *closingWindow);
 
 private:
 	Ui::NandSeeWindow *ui;

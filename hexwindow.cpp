@@ -24,5 +24,5 @@ void HexWindow::setData(const QByteArray &data)
 void HexWindow::closeWindow()
 {
 	close();
-	delete this;
+    emit closeHexWindow(this);
 }

@@ -405,6 +405,14 @@ void NandSeeWindow::openHexWindow(const QModelIndex &index)
 	newWindow->setData(e.data());
 	newWindow->setWindowTitle(newWindowTitle);
 	newWindow->show();
+    connect(newWindow, SIGNAL(closeHexWindow(HexWindow*)),
+            this, SLOT(closeHexWindow(HexWindow*)));
+}
+
+void NandSeeWindow::closeHexWindow(HexWindow *closingWindow)
+{
+    closingWindow->close();
+    closingWindow->deleteLater();
 }
 
 void NandSeeWindow::ignoreEvents()
