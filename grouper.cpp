@@ -779,11 +779,9 @@ static int st_scanning(struct state *st) {
             // Register 0 implies this is a CMD.
             else if (sd->reg == 0) {
                 if ((sd->val&0x3f) == 55 || evt->cmd&0x80) {
-                    qDebug() << "CMD 55";
                     evt->cmd = 0x80 | (0x3f & sd->val);
                 }
                 else {
-                    qDebug() << "SD code:" << (0x3f&sd->val);
                     evt->cmd = 0x3f & sd->val;
                 }
             }

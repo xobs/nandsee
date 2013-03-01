@@ -37,7 +37,8 @@ uint8_t nand_unscramble_byte(uint8_t byte) {
 }
 
 int nand_print(struct state *st, uint8_t data, uint8_t ctrl) {
-    printf("NAND %02x %c %c %c %c %c %c\n",
+    fprintf(stderr,
+            "NAND %02x %c %c %c %c %c %c\n",
             data,
             ctrl&NAND_ALE?'A':' ',
             ctrl&NAND_CLE?'C':' ',
