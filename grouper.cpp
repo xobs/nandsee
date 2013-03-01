@@ -10,6 +10,7 @@
 #include "event-struct.h"
 #include "state.h"
 #include "byteswap.h"
+#include "nand.h"
 
 #define SKIP_AMOUNT 80
 #define SEARCH_LIMIT 20

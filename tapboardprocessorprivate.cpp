@@ -6,6 +6,7 @@
 #include "packet-struct.h"
 #include "event-struct.h"
 #include "byteswap.h"
+#include "nand.h"
 
 struct state;
 

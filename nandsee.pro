@@ -44,7 +44,8 @@ HEADERS  += nandseewindow.h \
     state.h \
     packet-struct.h \
     tapboardprocessorprivate.h \
-    byteswap.h
+    byteswap.h \
+    nand.h
 
 FORMS    += nandseewindow.ui \
     hexwindow.ui
