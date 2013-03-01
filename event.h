@@ -82,6 +82,11 @@ public:
 	uint8_t sdCmdCMD() const;
 	const QString &sdCmdArgs() const;
 
+	/* NAND unknown packet */
+	uint8_t nandUnknownData() const;
+	uint8_t nandUnknownControl() const;
+	uint16_t nandUnknownPins() const;
+
 private:
     union evt evt;
 	QByteArray _dataAsByteArray;

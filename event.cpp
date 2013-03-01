@@ -362,6 +362,21 @@ const QString &Event::sdCmdArgs() const
 	return _sdArgs;
 }
 
+uint8_t Event::nandUnknownControl() const
+{
+	return evt.nand_unk.ctrl;
+}
+
+uint8_t Event::nandUnknownData() const
+{
+	return evt.nand_unk.data;
+}
+
+uint16_t Event::nandUnknownPins() const
+{
+	return evt.nand_unk.unknown;
+}
+
 qreal Event::entropy() const
 {
 	return _entropy;
