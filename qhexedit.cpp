@@ -159,6 +159,16 @@ bool QHexEdit::overwriteMode()
     return qHexEdit_p->overwriteMode();
 }
 
+void QHexEdit::setHighlightSame(bool highlightSame)
+{
+    qHexEdit_p->setHighlightSame(highlightSame);
+}
+
+bool QHexEdit::highlightSame()
+{
+    return qHexEdit_p->highlightSame();
+}
+
 void QHexEdit::setReadOnly(bool readOnly)
 {
     qHexEdit_p->setReadOnly(readOnly);

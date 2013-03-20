@@ -99,6 +99,9 @@ more.
     /*! Set the font of the widget. Please use fixed width fonts like Mono or Courier.*/
     Q_PROPERTY(QFont font READ font WRITE setFont)
 
+    /*! Highlight similar hex values */
+    Q_PROPERTY(bool highlightSame READ highlightSame WRITE setHighlightSame)
+
 
 public:
     /*! Creates an instance of QHexEdit.
@@ -176,6 +179,7 @@ public:
     bool overwriteMode();
     void setReadOnly(bool);
     bool isReadOnly();
+    bool highlightSame();
     const QFont &font() const;
     void setFont(const QFont &);
     /*! \endcond docNever */
@@ -205,6 +209,11 @@ public slots:
       \param mode true (show it), false (hide it).
       */
     void setHighlighting(bool mode);
+
+    /*! Switch whether similar hex values are highlighted.
+      \param mode true (highlight same), false (don't highlight)
+      */
+    void setHighlightSame(bool);
 
     /*! Undoes the last operation. If there is no operation to undo, i.e.
       there is no undo step in the undo/redo history, nothing happens.

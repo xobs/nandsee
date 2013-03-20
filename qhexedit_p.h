@@ -34,6 +34,9 @@ public:
     void setOverwriteMode(bool overwriteMode);
     bool overwriteMode();
 
+    void setHighlightSame(bool highlightSame);
+    bool highlightSame();
+
     void setReadOnly(bool readOnly);
     bool isReadOnly();
 
@@ -108,6 +111,7 @@ private:
     bool _highlighting;                     // highlighting of changed bytes
     bool _overwriteMode;
     bool _readOnly;                         // true: the user can only look and navigate
+    bool _highlightSame;                    // true: highlight visible bytes that are the same
 
     int _charWidth, _charHeight;            // char dimensions (dpendend on font)
     int _cursorX, _cursorY;                 // graphics position of the cursor

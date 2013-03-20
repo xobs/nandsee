@@ -21,6 +21,7 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *parent) : QWidget(parent)
     setHighlighting(true);
     setOverwriteMode(true);
     setReadOnly(false);
+    setHighlightSame(false);
     setAddressAreaColor(QColor(0xd4, 0xd4, 0xd4, 0xff));
     setHighlightingColor(QColor(0xff, 0xff, 0x99, 0xff));
     setSelectionColor(QColor(0x6d, 0x9e, 0xff, 0xff));
@@ -270,6 +271,17 @@ void QHexEditPrivate::setOverwriteMode(bool overwriteMode)
 bool QHexEditPrivate::overwriteMode()
 {
     return _overwriteMode;
+}
+
+void QHexEditPrivate::setHighlightSame(bool highlightSame)
+{
+    _highlightSame = highlightSame;
+    update();
+}
+
+bool QHexEditPrivate::highlightSame()
+{
+    return _highlightSame;
 }
 
 void QHexEditPrivate::redo()
@@ -657,6 +669,12 @@ void QHexEditPrivate::paintEvent(QPaintEvent *event)
                 painter.setBackground(selected);
                 painter.setBackgroundMode(Qt::OpaqueMode);
                 painter.setPen(colSelected);
+            }
+            else if ((_highlightSame && _xData.data().at(posBa) == _xData.data().at(getSelectionBegin())))
+            {
+                painter.setBackground(highLighted);
+                painter.setPen(colHighlighted);
+                painter.setBackgroundMode(Qt::OpaqueMode);
             }
             else
             {
