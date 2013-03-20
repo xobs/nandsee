@@ -53,6 +53,7 @@ static int buffer_get_packet(struct state *st, struct pkt *pkt) {
 }
 
 static int buffer_unget_packet(struct state *st, struct pkt *pkt) {
+    Q_UNUSED(pkt);
     st->buffer_offset--;
     if (st->buffer_offset < 0)
         st->buffer_offset = SKIP_AMOUNT-1;
@@ -70,6 +71,7 @@ static int buffer_put_packet(struct state *st, struct pkt *pkt) {
 
 
 static int is_ib_command(struct state *st, struct pkt *pkt) {
+    Q_UNUSED(st);
     return (pkt->header.type == PACKET_COMMAND
             && (pkt->data.command.cmd[0] == 'i'
             &&  pkt->data.command.cmd[1] == 'b')
@@ -77,6 +79,7 @@ static int is_ib_command(struct state *st, struct pkt *pkt) {
 }
 
 static int is_sync_point(struct state *st, struct pkt *pkt) {
+    Q_UNUSED(st);
     return ((pkt->header.type == PACKET_HELLO)
     || (pkt->header.type == PACKET_COMMAND
             && (pkt->data.command.cmd[0] == 'i'
@@ -90,6 +93,7 @@ static int is_sync_point(struct state *st, struct pkt *pkt) {
 }
 
 static int is_nand(struct state *st, struct pkt *pkt) {
+    Q_UNUSED(st);
     return (pkt->header.type == PACKET_NAND_CYCLE);
 }
 
@@ -130,6 +134,7 @@ int jstate_free(struct state **st) {
 
 // Dummy state that should never be reached
 static int st_uninitialized(struct state *st) {
+    Q_UNUSED(st);
     printf("state error: should not be in this state\n");
     return -1;
 }
@@ -244,15 +249,18 @@ static int st_backtrack(struct state *st) {
 }
 
 static int st_done(struct state *st) {
+    Q_UNUSED(st);
     return 1;
 }
 
 static int st_overflowed(struct state *st) {
+    Q_UNUSED(st);
     printf("Overflowed not supported\n");
     return 1;
 }
 
 static int st_draining(struct state *st) {
+    Q_UNUSED(st);
     printf("Draining not supported\n");
     return 1;
 }

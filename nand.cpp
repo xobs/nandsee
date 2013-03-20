@@ -1,3 +1,4 @@
+#include <QtCore>
 #include <stdio.h>
 #include <stdint.h>
 #include "state.h"
@@ -37,6 +38,7 @@ uint8_t nand_unscramble_byte(uint8_t byte) {
 }
 
 int nand_print(struct state *st, uint8_t data, uint8_t ctrl) {
+    Q_UNUSED(st);
     fprintf(stderr,
             "NAND %02x %c %c %c %c %c %c\n",
             data,
