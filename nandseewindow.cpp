@@ -73,6 +73,10 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 			this, SLOT(exportCurrentView()));
 	connect(ui->exportPageMenuItem, SIGNAL(triggered()),
 			this, SLOT(exportCurrentPage()));
+
+    connect(ui->actionHighlightMatches, SIGNAL(toggled(bool)),
+            ui->hexView, SLOT(setHighlightSame(bool)));
+
 	hideLabels();
 }
 
@@ -312,7 +316,7 @@ void NandSeeWindow::updateHexView()
 			data[i] ^= _xorPattern.at(i%_xorPattern.size());
 		}
 	}
-	ui->hexView->setData(currentData);
+    ui->hexView->setData(currentData);
 
 	if (currentData.size())
 		ui->dataSizeLabel->setText(QString::number(currentData.size()));

@@ -58,6 +58,7 @@
    </attribute>
    <addaction name="ignoreEventsAction"/>
    <addaction name="unignoreEventsAction"/>
+   <addaction name="actionHighlightMatches"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="eventListDock">
@@ -413,6 +414,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionHighlightMatches">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Highlight Matches</string>
+   </property>
+   <property name="toolTip">
+    <string>Highlight similar hex values</string>
    </property>
   </action>
  </widget>
