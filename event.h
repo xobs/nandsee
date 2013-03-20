@@ -50,8 +50,8 @@ public:
 
 	/* NAND Change Read Column or NAND Read */
 	const QByteArray &data() const;
-	const QString &nandReadAddr() const;
-	const QString &nandChangeReadColumnAddr() const;
+    const QString &nandReadRowAddr() const;
+    const QString &nandReadColumnAddr() const;
 
     /* Network command */
     const QString &netCmd() const;
@@ -95,7 +95,7 @@ private:
 	QByteArray _data;
     QString _netCmd;
 	QString _sandiskChargeAddr;
-	QString _nandReadAddr;
+    QString _nandReadRowAddr;
 	QString _nandReadColumnAddr;
 	QString _sdArgs;
 	double _entropy;

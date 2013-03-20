@@ -171,25 +171,19 @@ void Event::decodeEvent() {
     }
 
 	_nandReadColumnAddr = "";
+    _nandReadRowAddr = "";
 	if (eventType() == EVT_NAND_CHANGE_READ_COLUMN) {
-		for (unsigned int i=0; i<sizeof(evt.nand_change_read_coumn.addr); i++) {
-			if (i>0)
-				_nandReadColumnAddr += " ";
-			_nandReadColumnAddr += QString("%1").arg(evt.nand_change_read_coumn.addr[i], 2, 16, QChar('0'));
-		}
-		_data.resize(_ntohl(evt.nand_change_read_coumn.count));
+        _nandReadColumnAddr = QString("%1 %2").arg(evt.nand_change_read_coumn.addr[1], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[0], 2, 16, QChar('0'));
+        _nandReadRowAddr = QString("%1 %2 %3").arg(evt.nand_change_read_coumn.addr[4], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[3], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[2], 2, 16, QChar('0'));
+        _data.resize(_ntohl(evt.nand_change_read_coumn.count));
 		memcpy(_data.data(), evt.nand_change_read_coumn.data, _ntohl(evt.nand_change_read_coumn.count));
 		_entropy = getEntropy(_data);
 	}
 
-	_nandReadAddr = "";
 	if (eventType() == EVT_NAND_READ) {
-		for (unsigned int i=0; i<sizeof(evt.nand_read.addr); i++) {
-			if (i>0)
-				_nandReadAddr += " ";
-			_nandReadAddr += QString("%1").arg(evt.nand_read.addr[i], 2, 16, QChar('0'));
-		}
-		_data.resize(_ntohl(evt.nand_read.count));
+        _nandReadColumnAddr = QString("%1 %2").arg(evt.nand_change_read_coumn.addr[1], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[0], 2, 16, QChar('0'));
+        _nandReadRowAddr = QString("%1 %2 %3").arg(evt.nand_change_read_coumn.addr[4], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[3], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[2], 2, 16, QChar('0'));
+        _data.resize(_ntohl(evt.nand_read.count));
 		memcpy(_data.data(), evt.nand_read.data, _ntohl(evt.nand_read.count));
 		_entropy = getEntropy(_data);
 	}
@@ -200,13 +194,9 @@ void Event::decodeEvent() {
 		_entropy = getEntropy(_data);
 	}
 
-	_sandiskChargeAddr = "";
+    _sandiskChargeAddr = "";
 	if (eventType() == EVT_NAND_SANDISK_CHARGE1) {
-		for (unsigned int i=0; i<sizeof(evt.nand_sandisk_charge1.addr); i++) {
-			if (i>0)
-				_sandiskChargeAddr += " ";
-			_sandiskChargeAddr += QString("%1").arg(evt.nand_sandisk_charge1.addr[i], 2, 16, QChar('0'));
-		}
+        _sandiskChargeAddr = QString("%1 %2 %3").arg(evt.nand_sandisk_charge1.addr[2], 2, 16, QChar('0')).arg(evt.nand_sandisk_charge1.addr[1], 2, 16, QChar('0')).arg(evt.nand_sandisk_charge1.addr[0], 2, 16, QChar('0'));
 	}
 	else if (eventType() == EVT_NAND_SANDISK_CHARGE2) {
 		for (unsigned int i=0; i<sizeof(evt.nand_sandisk_charge2.addr); i++) {
@@ -219,7 +209,7 @@ void Event::decodeEvent() {
 	_sdArgs = "";
 	if (eventType() == EVT_SD_CMD) {
 		_sdArgs = "";
-		for (int i=0; i<_ntohl(evt.sd_cmd.num_args); i++) {
+        for (unsigned int i=0; i<_ntohl(evt.sd_cmd.num_args); i++) {
 			if (i>0)
 				_sdArgs += " ";
 			_sdArgs += QString("%1").arg(evt.sd_cmd.args[i], 2, 16, QChar('0'));
@@ -337,14 +327,14 @@ const QString &Event::nandSandiskChargeAddr() const
 	return _sandiskChargeAddr;
 }
 
-const QString &Event::nandReadAddr() const
+const QString &Event::nandReadColumnAddr() const
 {
-	return _nandReadAddr;
+    return _nandReadColumnAddr;
 }
 
-const QString &Event::nandChangeReadColumnAddr() const
+const QString &Event::nandReadRowAddr() const
 {
-	return _nandReadColumnAddr;
+    return _nandReadRowAddr;
 }
 
 uint8_t Event::sdCmdCMD() const

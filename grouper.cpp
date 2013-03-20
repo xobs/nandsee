@@ -558,15 +558,13 @@ static int write_nand_cmd(struct state *st, struct pkt *pkt) {
 
     // If it's not a command, we're lost
     if (!nand_cle(nand->control)) {
-        fprintf(stderr, "We're lost in NAND-land.  ");
-        nand_print(st, nand->data, nand->control);
         evt_write_nand_unk(st, pkt);
         return 0;
     }
 
     // "Get ID" command
     if (nand->data == 0x90) {
-        return evt_write_id(st, pkt);
+        evt_write_id(st, pkt);
     }
     else if (nand->data == 0x5c) {
         evt_write_sandisk_set(st, pkt);
@@ -608,8 +606,7 @@ static int write_nand_cmd(struct state *st, struct pkt *pkt) {
         evt_write_nand_cache4(st, pkt);
     }
     else {
-        fprintf(stderr, "Unknown NAND command.  ");
-        nand_print(st, nand->data, nand->control);
+        evt_write_nand_unk(st, pkt);
     }
     return 0;
 }
@@ -670,6 +667,7 @@ int evt_put(struct state *st, void *v) {
 
 // Dummy state that should never be reached
 static int st_uninitialized(struct state *st) {
+    Q_UNUSED(st);
     printf("state error: should not be in this state\n");
     return -1;
 }
@@ -840,10 +838,12 @@ static int st_scanning(struct state *st) {
 }
 
 static int st_grouping(struct state *st) {
+    Q_UNUSED(st);
     return 0;
 }
 
 static int st_done(struct state *st) {
+    Q_UNUSED(st);
     printf("Done.\n");
     return 0;
 }

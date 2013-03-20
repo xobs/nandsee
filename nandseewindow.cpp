@@ -149,7 +149,7 @@ void NandSeeWindow::updateEventDetails()
 
 
 	rawPacketHex = "";
-	for (int i=sizeof(evt_header); i<e.rawPacketSize(); i++) {
+    for (unsigned int i=sizeof(evt_header); i<e.rawPacketSize(); i++) {
 		if (i>sizeof(evt_header))
 			rawPacketHex += " ";
 		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
@@ -226,18 +226,30 @@ void NandSeeWindow::updateEventDetails()
 	}
 	if (e.eventType() == EVT_NAND_READ) {
 		ui->attributeLine->setVisible(true);
-		ui->attribute1Label->setText("Address:");
+
+        ui->attribute1Label->setText("Column:");
 		ui->attribute1Label->setVisible(true);
-		ui->attribute1Value->setText(e.nandReadAddr());
+        ui->attribute1Value->setText(e.nandReadColumnAddr());
 		ui->attribute1Value->setVisible(true);
-	}
+
+        ui->attribute2Label->setText("Row:");
+        ui->attribute2Label->setVisible(true);
+        ui->attribute2Value->setText(e.nandReadRowAddr());
+        ui->attribute2Value->setVisible(true);
+    }
 	if (e.eventType() == EVT_NAND_CHANGE_READ_COLUMN) {
 		ui->attributeLine->setVisible(true);
-		ui->attribute1Label->setText("Address:");
-		ui->attribute1Label->setVisible(true);
-		ui->attribute1Value->setText(e.nandChangeReadColumnAddr());
-		ui->attribute1Value->setVisible(true);
-	}
+
+        ui->attribute1Label->setText("Column:");
+        ui->attribute1Label->setVisible(true);
+        ui->attribute1Value->setText(e.nandReadColumnAddr());
+        ui->attribute1Value->setVisible(true);
+
+        ui->attribute2Label->setText("Row:");
+        ui->attribute2Label->setVisible(true);
+        ui->attribute2Value->setText(e.nandReadRowAddr());
+        ui->attribute2Value->setVisible(true);
+    }
 	if (e.eventType() == EVT_SD_CMD) {
 		ui->attributeLine->setVisible(true);
 
@@ -331,6 +343,8 @@ void NandSeeWindow::hideLabels()
 	ui->attribute1Value->setVisible(false);
 	ui->attribute2Label->setVisible(false);
 	ui->attribute2Value->setVisible(false);
+    ui->attribute3Label->setVisible(false);
+    ui->attribute3Value->setVisible(false);
 }
 
 void NandSeeWindow::changeLastSelected(const QModelIndex &index, const QModelIndex &old)
