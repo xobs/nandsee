@@ -670,7 +670,8 @@ void QHexEditPrivate::paintEvent(QPaintEvent *event)
                 painter.setBackgroundMode(Qt::OpaqueMode);
                 painter.setPen(colSelected);
             }
-            else if ((_highlightSame && _xData.data().at(posBa) == _xData.data().at(getSelectionBegin())))
+            else if (getSelectionBegin() < _xData.size() && posBa < _xData.size()
+                     && (_highlightSame && _xData.data().at(posBa) == _xData.data().at(getSelectionBegin())))
             {
                 painter.setBackground(highLighted);
                 painter.setPen(colHighlighted);
