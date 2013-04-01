@@ -37,6 +37,9 @@ public:
     void setHighlightSame(bool highlightSame);
     bool highlightSame();
 
+    void setInvertValues(bool invertValues);
+    bool invertValues();
+
     void setReadOnly(bool readOnly);
     bool isReadOnly();
 
@@ -112,6 +115,7 @@ private:
     bool _overwriteMode;
     bool _readOnly;                         // true: the user can only look and navigate
     bool _highlightSame;                    // true: highlight visible bytes that are the same
+    bool _invertValues;                     // true: invert buffer contents
 
     int _charWidth, _charHeight;            // char dimensions (dpendend on font)
     int _cursorX, _cursorY;                 // graphics position of the cursor

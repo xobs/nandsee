@@ -25,7 +25,7 @@ public:
     int addressWidth();
     void setAddressWidth(int width);
 
-    QByteArray & data();
+    QByteArray & data(bool invert);
     void setData(QByteArray data);
 
     bool dataChanged(int i);
@@ -45,7 +45,7 @@ public:
     QByteArray & replace(int index, const QByteArray & ba);
     QByteArray & replace(int index, int length, const QByteArray & ba);
 
-    QChar asciiChar(int index);
+    QChar asciiChar(int index, bool invert);
     QString toRedableString(int start=0, int end=-1);
 
 signals:
@@ -54,6 +54,7 @@ public slots:
 
 private:
     QByteArray _data;
+    QByteArray _invData;
     QByteArray _changedData;
 
     int _addressNumbers;                    // wanted width of address area

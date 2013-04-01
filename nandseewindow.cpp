@@ -77,6 +77,9 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
     connect(ui->actionHighlightMatches, SIGNAL(toggled(bool)),
             ui->hexView, SLOT(setHighlightSame(bool)));
 
+    connect(ui->actionInvertValues, SIGNAL(toggled(bool)),
+            ui->hexView, SLOT(setInvertValues(bool)));
+
 	hideLabels();
 }
 

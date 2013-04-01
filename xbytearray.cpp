@@ -30,10 +30,23 @@ void XByteArray::setAddressWidth(int width)
         _addressNumbers = width;
     }
 }
-
+/*
 QByteArray & XByteArray::data()
 {
     return _data;
+}*/
+
+QByteArray & XByteArray::data(bool invert)
+{
+    if(!invert)
+        return _data;
+    else {
+        _invData.resize(_data.length());
+        for( int i = 0; i < _data.length(); i++ ) {
+            _invData[i] = ~_data[i];
+        }
+        return _invData;
+    }
 }
 
 void XByteArray::setData(QByteArray data)
@@ -131,9 +144,11 @@ QByteArray & XByteArray::replace(int index, int length, const QByteArray & ba)
     return _data;
 }
 
-QChar XByteArray::asciiChar(int index)
+QChar XByteArray::asciiChar(int index, bool invert)
 {
     char ch = _data[index];
+    if (invert)
+        ch = ~ch;
     if ((ch < 0x20) or (ch > 0x7e))
             ch = '.';
     return QChar(ch);
@@ -158,7 +173,7 @@ QString XByteArray::toRedableString(int start, int end)
             if ((i + j) < _data.size())
             {
                 hexStr.append(" ").append(_data.mid(i+j, 1).toHex());
-                ascStr.append(asciiChar(i+j));
+                ascStr.append(asciiChar(i+j, false));
             }
         }
         result += adrStr + " " + QString("%1").arg(hexStr, -48) + "  " + QString("%1").arg(ascStr, -17) + "\n";

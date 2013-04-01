@@ -102,6 +102,9 @@ more.
     /*! Highlight similar hex values */
     Q_PROPERTY(bool highlightSame READ highlightSame WRITE setHighlightSame)
 
+    /*! Invert buffer */
+    Q_PROPERTY(bool invertValues READ invertValues WRITE setInvertValues)
+
 
 public:
     /*! Creates an instance of QHexEdit.
@@ -180,6 +183,7 @@ public:
     void setReadOnly(bool);
     bool isReadOnly();
     bool highlightSame();
+    bool invertValues();
     const QFont &font() const;
     void setFont(const QFont &);
     /*! \endcond docNever */
@@ -214,6 +218,11 @@ public slots:
       \param mode true (highlight same), false (don't highlight)
       */
     void setHighlightSame(bool);
+
+    /*! Switch whether values in buffer are inverted or not.
+      \param mode true (invert buffer), false (true buffer)
+      */
+    void setInvertValues(bool);
 
     /*! Undoes the last operation. If there is no operation to undo, i.e.
       there is no undo step in the undo/redo history, nothing happens.

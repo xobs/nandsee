@@ -52,12 +52,12 @@ void CharCommand::redo()
             _xData->insert(_charPos, _newChar);
             break;
         case replace:
-            _oldChar = _xData->data()[_charPos];
+            _oldChar = _xData->data(false)[_charPos];
             _wasChanged = _xData->dataChanged(_charPos);
             _xData->replace(_charPos, _newChar);
             break;
         case remove:
-            _oldChar = _xData->data()[_charPos];
+            _oldChar = _xData->data(false)[_charPos];
             _wasChanged = _xData->dataChanged(_charPos);
             _xData->remove(_charPos, 1);
             break;
@@ -102,12 +102,12 @@ void ArrayCommand::redo()
             _xData->insert(_baPos, _newBa);
             break;
         case replace:
-            _oldBa = _xData->data().mid(_baPos, _len);
+            _oldBa = _xData->data(false).mid(_baPos, _len);
             _wasChanged = _xData->dataChanged(_baPos, _len);
             _xData->replace(_baPos, _newBa);
             break;
         case remove:
-            _oldBa = _xData->data().mid(_baPos, _len);
+            _oldBa = _xData->data(false).mid(_baPos, _len);
             _wasChanged = _xData->dataChanged(_baPos, _len);
             _xData->remove(_baPos, _len);
             break;
