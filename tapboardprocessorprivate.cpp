@@ -27,24 +27,33 @@ int sstate_free(struct state **st);
 
 int packet_get_next_raw(struct state *st, struct pkt *pkt) {
 	int ret;
-	QFile *fd = (QFile *)st->fdh;
+    QFile *fd = st->fdh;
 
 	ret = fd->read((char *) &pkt->header, sizeof(pkt->header));
-	if (ret < 0)
+    if (ret < 0) {
+        perror("Unable to read packet header");
 		return -1;
+    }
 
-	if (ret == 0)
+    if (ret == 0) {
+        perror("End of file while reading header");
 		return -2;
+    }
+
 	pkt->header.sec = _ntohl(pkt->header.sec);
 	pkt->header.nsec = _ntohl(pkt->header.nsec);
 	pkt->header.size = _ntohs(pkt->header.size);
 
 	ret = fd->read((char *)&pkt->data, pkt->header.size-sizeof(pkt->header));
-	if (ret < 0)
+    if (ret < 0) {
+        perror("Unable to read packet data");
 		return -1;
+    }
 
-	if (ret == 0)
+    if (ret == 0) {
+        perror("End of file while reading data");
 		return -2;
+    }
 
 	return 0;
 }
