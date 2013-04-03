@@ -415,6 +415,7 @@ static int evt_write_nand_change_read_column(struct state *st, struct pkt *pkt) 
     struct evt_nand_change_read_column evt;
     struct pkt pkts[6];
     int counter;
+    int ret;
     evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
                     sizeof(evt), EVT_NAND_CHANGE_READ_COLUMN);
 
@@ -458,13 +459,13 @@ static int evt_write_nand_change_read_column(struct state *st, struct pkt *pkt) 
     evt.count = 0;
     evt_fill_end(&evt, pkts[6].header.sec, pkts[6].header.nsec);
     memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
-    packet_get_next(st, pkt);
-    while (nand_re(pkt->data.nand_cycle.control)) {
+    ret = packet_get_next(st, pkt);
+    while (!ret && nand_re(pkt->data.nand_cycle.control)) {
         evt.data[evt.count++] = pkt->data.nand_cycle.data;
 
         evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
         memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
-        packet_get_next(st, pkt);
+        ret = packet_get_next(st, pkt);
     }
     packet_unget(st, pkt);
 
