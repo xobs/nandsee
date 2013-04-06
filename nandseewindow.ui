@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>622</height>
+    <height>896</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,9 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QHexEdit" name="hexView" native="true"/>
+     <widget class="QHexEdit" name="hexView" native="true">
+      <zorder>groupBox_3</zorder>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -45,6 +47,7 @@
     <addaction name="eventListAction"/>
     <addaction name="eventDetailsAction"/>
     <addaction name="utilitiesAction"/>
+    <addaction name="actionStats"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWindow"/>
@@ -370,6 +373,62 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="statsWidget">
+   <property name="minimumSize">
+    <size>
+     <width>280</width>
+     <height>128</height>
+    </size>
+   </property>
+   <property name="toolTip">
+    <string>Stats</string>
+   </property>
+   <property name="statusTip">
+    <string>Stats</string>
+   </property>
+   <property name="whatsThis">
+    <string>Stats</string>
+   </property>
+   <property name="windowTitle">
+    <string>Stats</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <widget class="QWidget" name="horizontalLayoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>1191</width>
+       <height>181</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QPlainTextEdit" name="histogramValues">
+        <property name="font">
+         <font>
+          <family>Courier</family>
+         </font>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGraphicsView" name="histogramView">
+        <property name="alignment">
+         <set>Qt::AlignHCenter|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+  </widget>
   <action name="exportViewMenuItem">
    <property name="text">
     <string>Export current hex view…</string>
@@ -469,6 +528,17 @@
    </property>
    <property name="toolTip">
     <string>Invert Hex Values</string>
+   </property>
+  </action>
+  <action name="actionStats">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Stats</string>
    </property>
   </action>
  </widget>
