@@ -26,6 +26,7 @@ public slots:
 	void openHexWindow(const QModelIndex &index);
 
 	void xorPatternChanged(const QString &text);
+    void xorPatternSkipChanged(const QString &text);
 
 	void exportCurrentView();
 	void exportCurrentPage();
@@ -42,6 +43,7 @@ private:
 	QByteArray currentData;
 	QModelIndex mostRecent;
 	QByteArray _xorPattern;
+    int _xorPatternSkip;
 
 	void updateEventDetails();
 	void updateHexView();

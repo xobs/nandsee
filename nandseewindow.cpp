@@ -68,6 +68,8 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 
 	connect(ui->xorPattern, SIGNAL(textChanged(QString)),
 			this, SLOT(xorPatternChanged(QString)));
+    connect(ui->xorPatternSkip, SIGNAL(textChanged(QString)),
+            this, SLOT(xorPatternSkipChanged(QString)));
 
 	connect(ui->exportViewMenuItem, SIGNAL(triggered()),
 			this, SLOT(exportCurrentView()));
@@ -324,8 +326,8 @@ void NandSeeWindow::updateHexView()
 	// Xor in the pattern, too
 	if (_xorPattern.size() > 0) {
 		char *data = currentData.data();
-		for (int i=0; i<currentData.size(); i++) {
-			data[i] ^= _xorPattern.at(i%_xorPattern.size());
+        for (int i=0; i<currentData.size()-_xorPatternSkip; i++) {
+            data[i+_xorPatternSkip] ^= _xorPattern.at(i%_xorPattern.size());
 		}
 	}
     ui->hexView->setData(currentData);
@@ -355,6 +357,12 @@ void NandSeeWindow::changeLastSelected(const QModelIndex &index, const QModelInd
     ui->ignoreEventsAction->setEnabled(true);
 }
 
+void NandSeeWindow::xorPatternSkipChanged(const QString &text)
+{
+    _xorPatternSkip = text.toInt();
+    updateHexView();
+}
+
 void NandSeeWindow::xorPatternChanged(const QString &text)
 {
 	QString tempString = text;
@@ -363,6 +371,8 @@ void NandSeeWindow::xorPatternChanged(const QString &text)
 	tempString.remove(" ");
 	tempString.remove(":");
 	tempString.remove("-");
+    tempString.remove("\n");
+    tempString.remove("\r");
 	_xorPattern = 0;
 
 	for (int i=0; i<tempString.length(); i+=2) {
