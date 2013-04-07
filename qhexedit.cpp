@@ -169,6 +169,16 @@ bool QHexEdit::highlightSame()
     return qHexEdit_p->highlightSame();
 }
 
+void QHexEdit::setInvertValues(bool invertValues)
+{
+    qHexEdit_p->setInvertValues(invertValues);
+}
+
+bool QHexEdit::invertValues()
+{
+    return qHexEdit_p->invertValues();
+}
+
 void QHexEdit::setReadOnly(bool readOnly)
 {
     qHexEdit_p->setReadOnly(readOnly);

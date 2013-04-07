@@ -58,7 +58,7 @@ void QHexEditPrivate::setData(const QByteArray &data)
 
 QByteArray QHexEditPrivate::data()
 {
-    return _xData.data();
+    return _xData.data(_invertValues);
 }
 
 void QHexEditPrivate::setAddressAreaColor(const QColor &color)
@@ -111,9 +111,9 @@ XByteArray & QHexEditPrivate::xData()
 
 int QHexEditPrivate::indexOf(const QByteArray & ba, int from)
 {
-    if (from > (_xData.data().length() - 1))
-        from = _xData.data().length() - 1;
-    int idx = _xData.data().indexOf(ba, from);
+    if (from > (_xData.data(_invertValues).length() - 1))
+        from = _xData.data(_invertValues).length() - 1;
+    int idx = _xData.data(_invertValues).indexOf(ba, from);
     if (idx > -1)
     {
         int curPos = idx*2;
@@ -156,7 +156,7 @@ int QHexEditPrivate::lastIndexOf(const QByteArray & ba, int from)
     from -= ba.length();
     if (from < 0)
         from = 0;
-    int idx = _xData.data().lastIndexOf(ba, from);
+    int idx = _xData.data(_invertValues).lastIndexOf(ba, from);
     if (idx > -1)
     {
         int curPos = idx*2;
@@ -282,6 +282,17 @@ void QHexEditPrivate::setHighlightSame(bool highlightSame)
 bool QHexEditPrivate::highlightSame()
 {
     return _highlightSame;
+}
+
+void QHexEditPrivate::setInvertValues(bool invertValues)
+{
+    _invertValues = invertValues;
+    update();
+}
+
+bool QHexEditPrivate::invertValues()
+{
+    return _invertValues;
 }
 
 void QHexEditPrivate::redo()
@@ -471,7 +482,7 @@ if (!_readOnly)
             // Change content
             if (_xData.size() > 0)
             {
-                QByteArray hexValue = _xData.data().mid(posBa, 1).toHex();
+                QByteArray hexValue = _xData.data(_invertValues).mid(posBa, 1).toHex();
                 if ((charX % 3) == 0)
                     hexValue[0] = key;
                 else
@@ -490,7 +501,7 @@ if (!_readOnly)
             QString result = QString();
             for (int idx = getSelectionBegin(); idx < getSelectionEnd(); idx++)
             {
-                result += _xData.data().mid(idx, 1).toHex() + " ";
+                result += _xData.data(_invertValues).mid(idx, 1).toHex() + " ";
                 if ((idx % 16) == 15)
                     result.append("\n");
             }
@@ -572,7 +583,7 @@ if (!_readOnly)
         QString result = QString();
         for (int idx = getSelectionBegin(); idx < getSelectionEnd(); idx++)
         {
-            result += _xData.data().mid(idx, 1).toHex() + " ";
+            result += _xData.data(_invertValues).mid(idx, 1).toHex() + " ";
             if ((idx % 16) == 15)
                 result.append('\n');
         }
@@ -648,7 +659,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent *event)
     }
 
     // paint hex area
-    QByteArray hexBa(_xData.data().mid(firstLineIdx, lastLineIdx - firstLineIdx + 1).toHex());
+    QByteArray hexBa(_xData.data(_invertValues).mid(firstLineIdx, lastLineIdx - firstLineIdx + 1).toHex());
     QBrush highLighted = QBrush(_highlightingColor);
     QPen colHighlighted = QPen(this->palette().color(QPalette::WindowText));
     QBrush selected = QBrush(_selectionColor);
@@ -671,7 +682,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent *event)
                 painter.setPen(colSelected);
             }
             else if (getSelectionBegin() < _xData.size() && posBa < _xData.size()
-                     && (_highlightSame && _xData.data().at(posBa) == _xData.data().at(getSelectionBegin())))
+                     && (_highlightSame && _xData.data(_invertValues).at(posBa) == _xData.data(_invertValues).at(getSelectionBegin())))
             {
                 painter.setBackground(highLighted);
                 painter.setPen(colHighlighted);
@@ -721,7 +732,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent *event)
             int xPosAscii = _xPosAscii;
             for (int colIdx = 0; ((lineIdx + colIdx) < _xData.size() and (colIdx < BYTES_PER_LINE)); colIdx++)
             {
-                painter.drawText(xPosAscii, yPos, _xData.asciiChar(lineIdx + colIdx));
+                painter.drawText(xPosAscii, yPos, _xData.asciiChar(lineIdx + colIdx, _invertValues));
                 xPosAscii += _charWidth;
             }
         }
