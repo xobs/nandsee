@@ -5,6 +5,13 @@
 #include <QModelIndex>
 #include <QItemSelectionModel>
 
+#define log2of10 3.32192809488736234787
+#define MONTEN	6		      /* Bytes used as Monte Carlo
+                     co-ordinates.	This should be no more
+                     bits than the mantissa of your
+                                         "double" floating point type. */
+
+
 namespace Ui {
 class NandSeeWindow;
 }
@@ -26,7 +33,7 @@ public slots:
 	void openHexWindow(const QModelIndex &index);
 
 	void xorPatternChanged(const QString &text);
-    void xorPatternSkipChanged(const QString &text);
+	void optimizeXor();
 
 	void exportCurrentView();
 	void exportCurrentPage();
@@ -45,9 +52,28 @@ private:
 	QByteArray _xorPattern;
     int _xorPatternSkip;
 
+    long ccount[256],	   /* Bins to count occurrences of values */
+            totalc; 	   /* Total bytes counted */
+    double prob[256];	   /* Probabilities per bin for entropy */
+
+
+    int mp, sccfirst;
+    unsigned int monte[MONTEN];
+    long inmont, mcount;
+    double cexp, incirc, montex, montey, montepi,
+              scc, sccun, sccu0, scclast, scct1, scct2, scct3,
+              ent, chisq, datasum;
+
+    double r_ent, r_chisq, r_mean, r_montepicalc, r_scc, r_chip;
+
 	void updateEventDetails();
 	void updateHexView();
 	void hideLabels();
+    void initEntropy();
+    void updateEntropy(unsigned char *buf, int bufl);
+    void finalizeEntropy();
+    double poz(double z);
+    double pochisq(double ax, int df);
 };
 
 #endif // NANDSEEWINDOW_H

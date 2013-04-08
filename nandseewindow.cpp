@@ -16,6 +16,16 @@
 #include "tapboardprocessor.h"
 #include "nand.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+#define PI M_PI
+
+#define	Z_MAX          6.0            /* maximum meaningful z value */
+#define	LOG_SQRT_PI     0.5723649429247000870717135 /* log (sqrt (pi)) */
+#define	I_SQRT_PI       0.5641895835477562869480795 /* 1 / sqrt (pi) */
+#define	BIGX           20.0         /* max value to represent exp (x) */
+#define	ex(x)             (((x) < -BIGX) ? 0.0 : exp(x))
 NandSeeWindow::NandSeeWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::NandSeeWindow)
@@ -85,7 +95,12 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
     connect(ui->actionInvertValues, SIGNAL(toggled(bool)),
             ui->hexView, SLOT(setInvertValues(bool)));
 
-	hideLabels();
+    connect(ui->optimizeXor, SIGNAL(clicked()),
+            this, SLOT(optimizeXor()));
+
+    hideLabels();
+
+    totalc = 0; // required init by entropy module
 }
 
 NandSeeWindow::~NandSeeWindow()
@@ -343,7 +358,32 @@ void NandSeeWindow::updateHexView()
 	else
         ui->dataSizeLabel->setText("-");
 
-	ui->histogramView->setData(currentData);
+    ui->histogramView->setData(currentData);
+
+    // update entropy window
+    this->initEntropy();
+    for(int i = 0; i < currentData.size(); i++) {
+        unsigned char c = currentData[i];
+        this->updateEntropy(&c, 1);
+    }
+    this->finalizeEntropy();
+
+    QString entropyStr = QString("Entropy = %1 bits/byte\n").arg(this->r_ent);
+    entropyStr += QString("mean = %1\n").arg(this->r_mean);
+    entropyStr += QString("monte carlo pi = %1, error %2\%\n").arg(this->r_montepicalc).arg(QString::number(100.0 * (fabs(PI - montepi) / PI),'f',2));
+    entropyStr += QString("serial correlation = %1\n").arg(this->r_scc);
+    entropyStr += QString("compresses by %1\%\n").arg(QString::number(100 * (8.0 - ent) / 8.0,'f',2));
+    entropyStr += QString("chisq of %1; n=%2\n").arg(this->r_chisq).arg(this->totalc);
+    if(this->r_chip < 0.01) {
+        entropyStr += QString(" <0.01\% chance of TRNG\n").arg(this->r_chip);
+    } else if( this->r_chip > 99.99 ) {
+        entropyStr += QString(" >99.99\% chance of TRNG\n").arg(this->r_chip);
+    } else {
+        entropyStr += QString(" %3\% chance of TRNG\n").arg(this->r_chip);
+    }
+    ui->extendedEntropy->clear();
+    ui->extendedEntropy->appendPlainText(entropyStr);
+   
 }
 
 void NandSeeWindow::hideLabels()
@@ -371,6 +411,263 @@ void NandSeeWindow::xorPatternSkipChanged(const QString &text)
     updateHexView();
 }
 
+void NandSeeWindow::initEntropy()
+{
+    /* Initialise for calculations */
+    int i;
+
+    ent = 0.0;		       /* Clear entropy accumulator */
+    chisq = 0.0;	       /* Clear Chi-Square */
+    datasum = 0.0;	       /* Clear sum of bytes for arithmetic mean */
+
+    mp = 0;		       /* Reset Monte Carlo accumulator pointer */
+    mcount = 0; 	       /* Clear Monte Carlo tries */
+    inmont = 0; 	       /* Clear Monte Carlo inside count */
+    incirc = 65535.0 * 65535.0;/* In-circle distance for Monte Carlo */
+
+    sccfirst = 1;	       /* Mark first time for serial correlation */
+    scct1 = scct2 = scct3 = 0.0; /* Clear serial correlation terms */
+
+    incirc = pow(pow(256.0, (double) (MONTEN / 2)) - 1, 2.0);
+
+    for (i = 0; i < 256; i++) {
+        ccount[i] = 0;
+    }
+    totalc = 0;
+}
+
+void NandSeeWindow::updateEntropy(unsigned char *buf, int bufl)
+{
+    unsigned char bp = 0;
+    unsigned char oc, c;
+
+    while (bufl-- > 0) {
+        oc = (buf[bp++] & 0xFF);
+        c =   oc;
+        ccount[c]++;		  /* Update counter for this bin */
+        totalc++;
+
+        /* Update inside / outside circle counts for Monte Carlo
+         computation of PI */
+
+        monte[mp++] = (double) oc;       /* Save character for Monte Carlo */
+        if (mp >= MONTEN) {     /* Calculate every MONTEN character */
+            int mj;
+
+            mp = 0;
+            mcount++;
+            montex = montey = 0;
+            for (mj = 0; mj < MONTEN / 2; mj++) {
+                montex = (montex * 256.0) + monte[mj];
+                montey = (montey * 256.0) + monte[(MONTEN / 2) + mj];
+            }
+            if ((montex * montex + montey *  montey) <= incirc) {
+                inmont++;
+            }
+        }
+
+        /* Update calculation of serial correlation coefficient */
+
+        sccun = (double) c;
+        if (sccfirst) {
+            sccfirst = 0;
+            scclast = 0;
+            sccu0 = sccun;
+        } else {
+            scct1 = scct1 + scclast * sccun;
+        }
+        scct2 = scct2 + sccun;
+        scct3 = scct3 + (sccun * sccun);
+        scclast = sccun;
+        oc <<= 1;
+    }
+}
+
+void NandSeeWindow::finalizeEntropy()
+{
+    int i;
+
+    /* Complete calculation of serial correlation coefficient */
+
+    scct1 = scct1 + scclast * sccu0;
+    scct2 = scct2 * scct2;
+    scc = totalc * scct3 - scct2;
+    if (scc == 0.0) {
+       scc = -100000;
+    } else {
+       scc = (totalc * scct1 - scct2) / scc;
+    }
+
+    /* Scan bins and calculate probability for each bin and
+       Chi-Square distribution.  The probability will be reused
+       in the entropy calculation below.  While we're at it,
+       we sum of all the data which will be used to compute the
+       mean. */
+
+    cexp = totalc / 256.0;  /* Expected count per bin */
+    for (i = 0; i < 256; i++) {
+       double a = ccount[i] - cexp;;
+
+       prob[i] = ((double) ccount[i]) / totalc;
+       chisq += (a * a) / cexp;
+       datasum += ((double) i) * ccount[i];
+    }
+
+    /* Calculate entropy */
+
+    for (i = 0; i < 256; i++) {
+       if (prob[i] > 0.0) {
+            ent += prob[i] * log2of10 * log10(1 / prob[i]);
+       }
+    }
+
+    /* Calculate Monte Carlo value for PI from percentage of hits
+       within the circle */
+
+    montepi = 4.0 * (((double) inmont) / mcount);
+
+    /* Return results through arguments */
+
+    r_ent = ent;
+    r_chisq = chisq;
+    r_mean = datasum / totalc;
+    r_montepicalc = montepi;
+    r_scc = scc;
+
+    r_chip = pochisq(chisq, 255) * 100;
+
+}
+
+
+/*
+
+    Compute probability of measured Chi Square value.
+
+    This code was developed by Gary Perlman of the Wang
+    Institute (full citation below) and has been minimally
+    modified for use in this program.
+
+*/
+
+
+/*HEADER
+    Module:       z.c
+    Purpose:      compute approximations to normal z distribution probabilities
+    Programmer:   Gary Perlman
+    Organization: Wang Institute, Tyngsboro, MA 01879
+    Copyright:    none
+    Tabstops:     4
+*/
+
+/*FUNCTION poz: probability of normal z value */
+/*ALGORITHM
+    Adapted from a polynomial approximation in:
+        Ibbetson D, Algorithm 209
+        Collected Algorithms of the CACM 1963 p. 616
+    Note:
+        This routine has six digit accuracy, so it is only useful for absolute
+        z values < 6.  For z values >= to 6.0, poz() returns 0.0.
+*/
+        /*VAR returns cumulative probability from -oo to z */
+double NandSeeWindow::poz(double z)  /*VAR normal z value */
+{
+    double y, x, w;
+
+    if (z == 0.0) {
+        x = 0.0;
+    } else {
+    y = 0.5 * fabs(z);
+    if (y >= (Z_MAX * 0.5)) {
+            x = 1.0;
+    } else if (y < 1.0) {
+       w = y * y;
+       x = ((((((((0.000124818987 * w
+           -0.001075204047) * w +0.005198775019) * w
+           -0.019198292004) * w +0.059054035642) * w
+           -0.151968751364) * w +0.319152932694) * w
+           -0.531923007300) * w +0.797884560593) * y * 2.0;
+    } else {
+        y -= 2.0;
+        x = (((((((((((((-0.000045255659 * y
+            +0.000152529290) * y -0.000019538132) * y
+            -0.000676904986) * y +0.001390604284) * y
+            -0.000794620820) * y -0.002034254874) * y
+            +0.006549791214) * y -0.010557625006) * y
+            +0.011630447319) * y -0.009279453341) * y
+            +0.005353579108) * y -0.002141268741) * y
+            +0.000535310849) * y +0.999936657524;
+        }
+    }
+    return (z > 0.0 ? ((x + 1.0) * 0.5) : ((1.0 - x) * 0.5));
+}
+
+/*
+    Module:       chisq.c
+    Purpose:      compute approximations to chisquare distribution probabilities
+    Contents:     pochisq()
+    Uses:         poz() in z.c (Algorithm 209)
+    Programmer:   Gary Perlman
+    Organization: Wang Institute, Tyngsboro, MA 01879
+    Copyright:    none
+    Tabstops:     4
+*/
+
+/*FUNCTION pochisq: probability of chi sqaure value */
+/*ALGORITHM Compute probability of chi square value.
+    Adapted from:
+        Hill, I. D. and Pike, M. C.  Algorithm 299
+        Collected Algorithms for the CACM 1967 p. 243
+    Updated for rounding errors based on remark in
+        ACM TOMS June 1985, page 185
+*/
+
+double NandSeeWindow::pochisq(
+        double ax,    /* obtained chi-square value */
+        int df	    /* degrees of freedom */
+        )
+{
+    double x = ax;
+    double a, y, s;
+    double e, c, z;
+    int even;	    	    /* true if df is an even number */
+
+    if (x <= 0.0 || df < 1) {
+        return 1.0;
+    }
+
+    a = 0.5 * x;
+//    even = (2 * (df / 2)) == df;
+    even = !(df & 0x1);
+    if (df > 1) {
+        y = ex(-a);
+    }
+    s = (even ? y : (2.0 * poz(-sqrt(x))));
+    if (df > 2) {
+    x = 0.5 * (df - 1.0);
+    z = (even ? 1.0 : 0.5);
+    if (a > BIGX) {
+            e = (even ? 0.0 : LOG_SQRT_PI);
+            c = log(a);
+            while (z <= x) {
+        e = log(z) + e;
+        s += ex(c * z - a - e);
+        z += 1.0;
+            }
+            return (s);
+        } else {
+        e = (even ? 1.0 : (I_SQRT_PI / sqrt(a)));
+        c = 0.0;
+        while (z <= x) {
+            e = e * (a / z);
+            c = c + e;
+            z += 1.0;
+            }
+        return (c * y + s);
+        }
+    } else {
+        return s;
+    }
+}
 void NandSeeWindow::xorPatternChanged(const QString &text)
 {
 	QString tempString = text;
