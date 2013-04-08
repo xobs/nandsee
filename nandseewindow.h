@@ -51,6 +51,7 @@ private:
 	QModelIndex mostRecent;
 	QByteArray _xorPattern;
     int _xorPatternSkip;
+    int lastAlignAt;
 
     long ccount[256],	   /* Bins to count occurrences of values */
             totalc; 	   /* Total bytes counted */
