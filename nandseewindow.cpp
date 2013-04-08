@@ -160,6 +160,27 @@ void NandSeeWindow::updateEventDetails()
 
 	hideLabels();
 
+/*
+	QString rawPacketHex = "";
+	for (unsigned int i=0; i<sizeof(evt_header); i++) {
+		if (i>0)
+			rawPacketHex += " ";
+		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
+	}
+	ui->rawPacketHeader->setText(rawPacketHex);
+
+
+	rawPacketHex = "";
+	for (unsigned int i=sizeof(evt_header); i<(unsigned int)e.rawPacketSize(); i++) {
+		if (i>sizeof(evt_header))
+			rawPacketHex += " ";
+		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
+	}
+	ui->rawPacketView->clear();
+	ui->rawPacketView->appendPlainText(rawPacketHex);
+	ui->rawPacketView->verticalScrollBar()->setValue(0);
+*/
+
 	if (e.eventType() == EVT_NAND_ID) {
 		ui->attributeLine->setVisible(true);
 
