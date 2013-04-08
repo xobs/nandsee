@@ -99,6 +99,7 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
     hideLabels();
 
     totalc = 0; // required init by entropy module
+    lastAlignAt = 0;
 }
 
 NandSeeWindow::~NandSeeWindow()
@@ -326,8 +327,8 @@ void NandSeeWindow::updateHexView()
 	// Xor in the pattern, too
 	if (_xorPattern.size() > 0) {
 		char *data = currentData.data();
-        for (int i=0; i<currentData.size()-_xorPatternSkip; i++) {
-            data[i+_xorPatternSkip] ^= _xorPattern.at(i%_xorPattern.size());
+        for (int i=0; i<currentData.size() - lastAlignAt; i++) {
+            data[i + lastAlignAt] ^= _xorPattern.at(i%_xorPattern.size());
 		}
 	}
     ui->hexView->setData(currentData);
@@ -354,12 +355,13 @@ void NandSeeWindow::updateHexView()
     entropyStr += QString("compresses by %1\%\n").arg(QString::number(100 * (8.0 - ent) / 8.0,'f',2));
     entropyStr += QString("chisq of %1; n=%2\n").arg(this->r_chisq).arg(this->totalc);
     if(this->r_chip < 0.01) {
-        entropyStr += QString(" <0.01\% chance of TRNG\n").arg(this->r_chip);
+        entropyStr += QString(" <0.01\% chance of TRNG\n");
     } else if( this->r_chip > 99.99 ) {
-        entropyStr += QString(" >99.99\% chance of TRNG\n").arg(this->r_chip);
+        entropyStr += QString(" >99.99\% chance of TRNG\n");
     } else {
         entropyStr += QString(" %3\% chance of TRNG\n").arg(this->r_chip);
     }
+    entropyStr += QString("\nLast alignment: %1 inserts\n").arg(lastAlignAt);
     ui->extendedEntropy->clear();
     ui->extendedEntropy->appendPlainText(entropyStr);
    
@@ -382,12 +384,6 @@ void NandSeeWindow::changeLastSelected(const QModelIndex &index, const QModelInd
 	mostRecent = index;
 	updateEventDetails();
     ui->ignoreEventsAction->setEnabled(true);
-}
-
-void NandSeeWindow::optimizeXor()
-{
-	QByteArray _localXor;
-	updateHexView();
 }
 
 void NandSeeWindow::initEntropy()
@@ -647,6 +643,27 @@ double NandSeeWindow::pochisq(
         return s;
     }
 }
+
+void NandSeeWindow::optimizeXor()
+{
+    double maxchisq = this->r_chisq;
+    lastAlignAt = 0;
+    int bestAlign = 0;
+    QString hexChars = "00";
+    for(int i=0;i<256;i++) {
+        lastAlignAt = i;
+        updateHexView(); // call this to update stats
+        if( this->r_chisq > maxchisq ) {
+            maxchisq = this->r_chisq;
+            bestAlign = i;
+        }
+//        this->update();
+        qApp->processEvents(QEventLoop::ExcludeSocketNotifiers);
+    }
+    lastAlignAt = bestAlign;
+    updateHexView();
+}
+
 void NandSeeWindow::xorPatternChanged(const QString &text)
 {
 	QString tempString = text;
