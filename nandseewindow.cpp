@@ -7,6 +7,7 @@
 #include <QScrollBar>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsLineItem>
+#include <histogramview.h>
 
 #include "nandseewindow.h"
 #include "eventitemmodel.h"
@@ -14,10 +15,6 @@
 #include "ui_nandseewindow.h"
 #include "tapboardprocessor.h"
 #include "nand.h"
-
-#define NUMBUCKETS 256
-#define HIST_Y 100.0 // total height scale of histogram
-#define HIST_W 2.0   // per line width
 
 NandSeeWindow::NandSeeWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -159,7 +156,7 @@ void NandSeeWindow::updateEventDetails()
 
 
 	rawPacketHex = "";
-    for (unsigned int i=sizeof(evt_header); i<e.rawPacketSize(); i++) {
+	for (unsigned int i=sizeof(evt_header); i<(unsigned int)e.rawPacketSize(); i++) {
 		if (i>sizeof(evt_header))
 			rawPacketHex += " ";
 		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
@@ -344,61 +341,9 @@ void NandSeeWindow::updateHexView()
 	if (currentData.size())
 		ui->dataSizeLabel->setText(QString::number(currentData.size()));
 	else
-		ui->dataSizeLabel->setText("-");
+        ui->dataSizeLabel->setText("-");
 
-    if (currentData.size() > 0) {
-        unsigned int buckets[NUMBUCKETS];
-        for(int i=0;i<NUMBUCKETS;i++)
-            buckets[i] = 0;
-        char *data = currentData.data();
-        for( int i = 0; i < currentData.size(); i++ ) {
-            buckets[(unsigned char)data[i]]++;
-        }
-
-        /////// graphics box update
-        QGraphicsScene *scene = new QGraphicsScene(ui->histogramView);
-        ui->histogramView->setScene(scene);
-
-        scene->setSceneRect(0, 0, NUMBUCKETS*HIST_W, HIST_Y);
-        float yscale = 0.0;
-        for(int i=0; i<NUMBUCKETS;i++) {
-            if (yscale < buckets[i]) {
-                yscale = buckets[i];
-            }
-        }
-        for(int i=0; i<NUMBUCKETS;i++) {
-            QGraphicsLineItem *line = new QGraphicsLineItem(i*HIST_W,HIST_Y - (buckets[i] * HIST_Y / yscale) + 2.0,i*HIST_W,HIST_Y + 2.0);
-            line->setPen(QPen(Qt::darkGray, 2));
-            scene->addItem(line);
-        }
-        scene->update();
-        ui->histogramView->update();
-
-        /////// text box update
-        QString histVals = "";
-        for(int j=0; j<NUMBUCKETS;j++) {
-            unsigned int maxval = 0;
-            unsigned int maxindex = 0;
-            for(int i=0; i<NUMBUCKETS;i++) {
-                if (maxval < buckets[i]) {
-                    maxval = buckets[i];
-                    maxindex = i;
-                }
-            }
-            histVals += QString("0x%1 occurs %2 times\n").arg((long)maxindex,2,16).arg(maxval);
-            buckets[maxindex] = 0;
-        }
-        ui->histogramValues->clear();
-        ui->histogramValues->appendPlainText(histVals);
-        ui->histogramValues->verticalScrollBar()->setValue(0);
-    } else {
-        QGraphicsScene *scene = new QGraphicsScene(ui->histogramView);
-        ui->histogramView->setScene(scene);
-        scene->update();
-        ui->histogramView->update();
-
-        ui->histogramValues->clear();
-    }
+	ui->histogramView->setData(currentData);
 }
 
 void NandSeeWindow::hideLabels()
