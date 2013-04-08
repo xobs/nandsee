@@ -7,7 +7,7 @@
 #include <QScrollBar>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsLineItem>
-#include <histogramview.h>
+#include "histogramview.h"
 
 #include "nandseewindow.h"
 #include "eventitemmodel.h"
@@ -81,8 +81,6 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 
 	connect(ui->xorPattern, SIGNAL(textChanged(QString)),
 			this, SLOT(xorPatternChanged(QString)));
-    connect(ui->xorPatternSkip, SIGNAL(textChanged(QString)),
-            this, SLOT(xorPatternSkipChanged(QString)));
 
 	connect(ui->exportViewMenuItem, SIGNAL(triggered()),
 			this, SLOT(exportCurrentView()));
@@ -160,25 +158,6 @@ void NandSeeWindow::updateEventDetails()
 	ui->indexLabel->setText(QString::number(mostRecent.row()));
 
 	hideLabels();
-
-	QString rawPacketHex = "";
-	for (unsigned int i=0; i<sizeof(evt_header); i++) {
-		if (i>0)
-			rawPacketHex += " ";
-		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
-	}
-	ui->rawPacketHeader->setText(rawPacketHex);
-
-
-	rawPacketHex = "";
-	for (unsigned int i=sizeof(evt_header); i<(unsigned int)e.rawPacketSize(); i++) {
-		if (i>sizeof(evt_header))
-			rawPacketHex += " ";
-		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
-	}
-	ui->rawPacketView->clear();
-	ui->rawPacketView->appendPlainText(rawPacketHex);
-	ui->rawPacketView->verticalScrollBar()->setValue(0);
 
 	if (e.eventType() == EVT_NAND_ID) {
 		ui->attributeLine->setVisible(true);
@@ -405,10 +384,10 @@ void NandSeeWindow::changeLastSelected(const QModelIndex &index, const QModelInd
     ui->ignoreEventsAction->setEnabled(true);
 }
 
-void NandSeeWindow::xorPatternSkipChanged(const QString &text)
+void NandSeeWindow::optimizeXor()
 {
-    _xorPatternSkip = text.toInt();
-    updateHexView();
+	QByteArray _localXor;
+	updateHexView();
 }
 
 void NandSeeWindow::initEntropy()
