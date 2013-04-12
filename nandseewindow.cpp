@@ -65,6 +65,8 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 	ui->eventList->setModel(_eventItemModel);
 	ui->eventList->setSelectionModel(_eventItemSelections);
 
+    this->setWindowTitle("nandsee - " + fileName);
+
     /* Wire everything up */
 	connect(_eventItemSelections, SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
 			this, SLOT(eventSelectionChanged(QItemSelection, QItemSelection)));
@@ -95,6 +97,9 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 
     connect(ui->optimizeXor, SIGNAL(clicked()),
             this, SLOT(optimizeXor()));
+
+    connect(ui->lastAlignOffset, SIGNAL(valueChanged(int)),
+            this, SLOT(updateAlign(int)));
 
     hideLabels();
 
@@ -317,6 +322,11 @@ void NandSeeWindow::updateEventDetails()
 	}
 }
 
+void NandSeeWindow::updateAlign(int value)
+{
+    this->lastAlignAt = value;
+    updateHexView();
+}
 
 void NandSeeWindow::updateHexView()
 {
@@ -325,6 +335,7 @@ void NandSeeWindow::updateHexView()
 	Event e = _eventItemModel->eventAt(mostRecent.row());
 	const QModelIndexList indexes = _eventItemSelections->selectedIndexes();
 
+    ui->lastAlignOffset->setValue(lastAlignAt);
 	// Xor the data in the hex output
 	currentData = 0;
 	for (int i=0; i<indexes.count(); i++) {
