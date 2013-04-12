@@ -43,6 +43,9 @@ public slots:
 
     void closeHexWindow(HexWindow *closingWindow);
 
+    void updateAlign(int value);
+
+
 private:
 	Ui::NandSeeWindow *ui;
 	EventItemModel *_eventItemModel;
