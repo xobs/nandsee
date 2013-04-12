@@ -320,6 +320,8 @@ void NandSeeWindow::updateEventDetails()
 
 void NandSeeWindow::updateHexView()
 {
+	if (mostRecent.row() < 0)
+		return;
 	Event e = _eventItemModel->eventAt(mostRecent.row());
 	const QModelIndexList indexes = _eventItemSelections->selectedIndexes();
 
