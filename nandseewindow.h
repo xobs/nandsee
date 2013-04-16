@@ -44,6 +44,7 @@ public slots:
     void closeHexWindow(HexWindow *closingWindow);
 
     void updateAlign(int value);
+	void invertBeforeXor(bool state);
 
 
 private:
@@ -55,6 +56,7 @@ private:
 	QByteArray _xorPattern;
     int _xorPatternSkip;
     int lastAlignAt;
+	bool _invertBeforeXor;
 
     long ccount[256],	   /* Bins to count occurrences of values */
             totalc; 	   /* Total bytes counted */

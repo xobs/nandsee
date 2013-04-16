@@ -61,6 +61,7 @@
    <addaction name="unignoreEventsAction"/>
    <addaction name="actionHighlightMatches"/>
    <addaction name="actionInvertValues"/>
+   <addaction name="actionInvertBeforeXor"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="eventListDock">
@@ -510,6 +511,14 @@
    </property>
    <property name="text">
     <string>Stats</string>
+   </property>
+  </action>
+  <action name="actionInvertBeforeXor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Invert-before-xor</string>
    </property>
   </action>
  </widget>

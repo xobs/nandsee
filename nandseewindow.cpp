@@ -99,6 +99,8 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 
     connect(ui->optimizeXor, SIGNAL(clicked()),
             this, SLOT(optimizeXor()));
+	connect(ui->actionInvertBeforeXor, SIGNAL(triggered(bool)),
+			this, SLOT(invertBeforeXor(bool)));
 
     connect(ui->lastAlignOffset, SIGNAL(valueChanged(int)),
             this, SLOT(updateAlign(int)));
@@ -166,27 +168,6 @@ void NandSeeWindow::updateEventDetails()
 	ui->indexLabel->setText(QString::number(mostRecent.row()));
 
 	hideLabels();
-
-/*
-	QString rawPacketHex = "";
-	for (unsigned int i=0; i<sizeof(evt_header); i++) {
-		if (i>0)
-			rawPacketHex += " ";
-		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
-	}
-	ui->rawPacketHeader->setText(rawPacketHex);
-
-
-	rawPacketHex = "";
-	for (unsigned int i=sizeof(evt_header); i<(unsigned int)e.rawPacketSize(); i++) {
-		if (i>sizeof(evt_header))
-			rawPacketHex += " ";
-		rawPacketHex += QString("%1").arg(e.rawPacket().at(i)&0xff, 2, 16, QChar('0'));
-	}
-	ui->rawPacketView->clear();
-	ui->rawPacketView->appendPlainText(rawPacketHex);
-	ui->rawPacketView->verticalScrollBar()->setValue(0);
-*/
 
 	if (e.eventType() == EVT_NAND_ID) {
 		ui->attributeLine->setVisible(true);
@@ -369,15 +350,19 @@ void NandSeeWindow::updateHexView()
 		}
 
 		// Xor the current data field onto the standing data backing
-		for (position=0; position<currentData.size() && position<currentArray.size(); position++)
-			data[position] ^= currentArray.at(position);
+		for (position=0; position<currentData.size() && position<currentArray.size(); position++) {
+			if (_invertBeforeXor && i>0)
+				data[position] ^= ~currentArray.at(position);
+			else
+				data[position] ^= currentArray.at(position);
+		}
 	}
 
 	// Xor in the pattern, too
 	if (_xorPattern.size() > 0) {
 		char *data = currentData.data();
         for (int i=0; i<currentData.size() - lastAlignAt; i++) {
-            data[i + lastAlignAt] ^= _xorPattern.at(i%_xorPattern.size());
+			data[i + lastAlignAt] ^= _xorPattern.at(i%_xorPattern.size());
 		}
 	}
     ui->hexView->setData(currentData);
@@ -691,6 +676,12 @@ double NandSeeWindow::pochisq(
     } else {
         return s;
     }
+}
+
+void NandSeeWindow::invertBeforeXor(bool state)
+{
+	_invertBeforeXor = state;
+	updateHexView();
 }
 
 void NandSeeWindow::optimizeXor()
