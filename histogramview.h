@@ -5,6 +5,8 @@
 #include <QList>
 #include <QPair>
 
+class QPlainTextEdit;
+
 class HistogramView : public QWidget
 {
     Q_OBJECT
@@ -14,12 +16,15 @@ private:
 	unsigned int mouseY;
 	static const unsigned int MAX_VALUE = 256;
 
+	QPlainTextEdit *statsOutput;
+
 	QList<QPair<int,int> > buckets;
 	QList<QPair<int,int> > sortedBuckets;
 
 public:
     explicit HistogramView(QWidget *parent = 0);
 	void setData(const QByteArray &newData);
+	void setStatsOutput(QPlainTextEdit *newStatsOutput);
 
 signals:
     

@@ -65,6 +65,8 @@ NandSeeWindow::NandSeeWindow(QWidget *parent) :
 	ui->eventList->setModel(_eventItemModel);
 	ui->eventList->setSelectionModel(_eventItemSelections);
 
+	ui->histogramView->setStatsOutput(ui->histogramValues);
+
     this->setWindowTitle("nandsee - " + fileName);
 
     /* Wire everything up */
@@ -278,6 +280,19 @@ void NandSeeWindow::updateEventDetails()
         ui->attribute2Value->setText(e.nandReadRowAddr());
         ui->attribute2Value->setVisible(true);
     }
+	if (e.eventType() == EVT_NAND_DATA) {
+		ui->attributeLine->setVisible(true);
+
+		ui->attribute1Label->setText("Column:");
+		ui->attribute1Label->setVisible(true);
+		ui->attribute1Value->setText(e.nandReadColumnAddr());
+		ui->attribute1Value->setVisible(true);
+
+		ui->attribute2Label->setText("Row:");
+		ui->attribute2Label->setVisible(true);
+		ui->attribute2Value->setText(e.nandReadRowAddr());
+		ui->attribute2Value->setVisible(true);
+	}
 	if (e.eventType() == EVT_SD_CMD) {
 		ui->attributeLine->setVisible(true);
 

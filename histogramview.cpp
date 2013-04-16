@@ -20,6 +20,7 @@ static bool numericalLessThan(QPair<int,int> i1, QPair<int,int> i2)
 HistogramView::HistogramView(QWidget *parent) :
     QWidget(parent)
 {
+	statsOutput = NULL;
 }
 
 
@@ -42,16 +43,23 @@ void HistogramView::setData(const QByteArray &newData)
 	qSort(sortedBuckets.begin(), sortedBuckets.end(), numericalLessThan);
 
 	/////// text box update
-	QString histVals = "";
-	for(index=0; index<MAX_VALUE; index++) {
-		histVals += QString("0x%1 occurs %2 times\n")
-					.arg(sortedBuckets[index].first, 2, 16)
-					.arg(sortedBuckets[index].second);
+	if (statsOutput) {
+		QString histVals = "";
+		for(index=0; index<MAX_VALUE; index++) {
+			histVals += QString("0x%1 occurs %2 times\n")
+						.arg(sortedBuckets[index].first, 2, 16)
+						.arg(sortedBuckets[index].second);
+		}
+		statsOutput->clear();
+		statsOutput->appendPlainText(histVals);
 	}
-	((QPlainTextEdit *)children().at(0))->clear();
-	((QPlainTextEdit *)children().at(0))->appendPlainText(histVals);
 
     update();
+}
+
+void HistogramView::setStatsOutput(QPlainTextEdit *newStatsOutput)
+{
+	statsOutput = newStatsOutput;
 }
 
 void HistogramView::mouseMoveEvent(QMouseEvent *event)

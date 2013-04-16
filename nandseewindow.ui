@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -325,7 +325,7 @@
   <widget class="QDockWidget" name="statsWidget">
    <property name="minimumSize">
     <size>
-     <width>100</width>
+     <width>300</width>
      <height>226</height>
     </size>
    </property>
@@ -347,50 +347,55 @@
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="HistogramView" name="histogramView" native="true">
-       <widget class="QPlainTextEdit" name="histogramValues">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>241</width>
-          <height>101</height>
-         </rect>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>Courier</family>
-         </font>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">background-color: rgba(255, 255, 255, 32);</string>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="undoRedoEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="plainText">
-         <string/>
-        </property>
-        <property name="backgroundVisible">
-         <bool>true</bool>
-        </property>
-       </widget>
+      <widget class="QPlainTextEdit" name="histogramValues">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>250</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Courier</family>
+        </font>
+       </property>
+       <property name="acceptDrops">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgba(255, 255, 255, 32);</string>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="undoRedoEnabled">
+        <bool>false</bool>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="plainText">
+        <string/>
+       </property>
+       <property name="backgroundVisible">
+        <bool>true</bool>
+       </property>
       </widget>
+     </item>
+     <item>
+      <widget class="HistogramView" name="histogramView" native="true"/>
      </item>
     </layout>
    </widget>

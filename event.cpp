@@ -32,7 +32,8 @@ QList<QString> &EventTypes()
         eventTypes.append("EVT_NAND_CHANGE_READ_COLUMN");
         eventTypes.append("EVT_NAND_UNKNOWN");
         eventTypes.append("EVT_NAND_RESET");
-        eventTypes.append("EVT_UNKNOWN");
+		eventTypes.append("EVT_UNKNOWN");
+		eventTypes.append("EVT_NAND_DATA");
 
         while (eventTypes.size() <= EVT_NAND_CACHE1-1)
             eventTypes.append("");
@@ -185,6 +186,14 @@ void Event::decodeEvent() {
         _nandReadRowAddr = QString("%1 %2 %3").arg(evt.nand_change_read_coumn.addr[4], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[3], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[2], 2, 16, QChar('0'));
         _data.resize(_ntohl(evt.nand_read.count));
 		memcpy(_data.data(), evt.nand_read.data, _ntohl(evt.nand_read.count));
+		_entropy = getEntropy(_data);
+	}
+
+	if (eventType() == EVT_NAND_DATA) {
+		_nandReadColumnAddr = QString("%1 %2").arg(evt.nand_data.addr[1], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[0], 2, 16, QChar('0'));
+		_nandReadRowAddr = QString("%1 %2 %3").arg(evt.nand_data.addr[4], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[3], 2, 16, QChar('0')).arg(evt.nand_change_read_coumn.addr[2], 2, 16, QChar('0'));
+		_data.resize(_ntohl(evt.nand_data.count));
+		memcpy(_data.data(), evt.nand_data.data, _ntohl(evt.nand_data.count));
 		_entropy = getEntropy(_data);
 	}
 

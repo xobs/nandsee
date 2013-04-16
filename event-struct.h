@@ -31,6 +31,7 @@ enum evt_type {
     EVT_NAND_UNKNOWN,
     EVT_NAND_RESET,
     EVT_UNKNOWN,
+	EVT_NAND_DATA,
     EVT_NAND_CACHE1 = 0x30,
     EVT_NAND_CACHE2 = 0x31,
     EVT_NAND_CACHE3 = 0x32,
@@ -183,10 +184,21 @@ struct evt_nand_unk_command {
 
 // We have no idea and we're lost
 struct evt_nand_unk {
-    struct evt_header hdr;
-    uint8_t data;
-    uint8_t ctrl;
-    uint16_t unknown;
+	struct evt_header hdr;
+	uint8_t addr[5];
+	uint8_t data;
+	uint8_t ctrl;
+	uint16_t unknown;
+} MY_PACK;
+
+// Generic NAND data
+struct evt_nand_data {
+	struct evt_header hdr;
+	uint8_t addr[5];
+	uint8_t unknown[2];
+	uint8_t direction;
+	uint32_t count;
+	uint8_t data[16384];
 } MY_PACK;
 
 struct evt_nand_reset {
@@ -229,6 +241,7 @@ union evt {
     struct evt_nand_unk_sandisk_param nand_unk_sandisk_param;
     struct evt_nand_unk_command nand_unk_command;
     struct evt_nand_unk nand_unk;
+	struct evt_nand_data nand_data;
     struct evt_nand_reset nand_reset;
     struct evt_nand_cache1 nand_cache1;
     struct evt_nand_cache2 nand_cache2;

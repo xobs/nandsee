@@ -415,7 +415,6 @@ static int evt_write_nand_change_read_column(struct state *st, struct pkt *pkt) 
     struct evt_nand_change_read_column evt;
     struct pkt pkts[6];
     int counter;
-    int ret;
     evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
                     sizeof(evt), EVT_NAND_CHANGE_READ_COLUMN);
 
@@ -455,19 +454,11 @@ static int evt_write_nand_change_read_column(struct state *st, struct pkt *pkt) 
     evt.addr[3] = pkts[3].data.nand_cycle.data;
     evt.addr[4] = pkts[4].data.nand_cycle.data;
     evt.addr[5] = pkts[5].data.nand_cycle.data;
+	memcpy(st->addr, evt.addr, sizeof(evt.addr));
 
     evt.count = 0;
     evt_fill_end(&evt, pkts[6].header.sec, pkts[6].header.nsec);
     memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
-    ret = packet_get_next(st, pkt);
-    while (!ret && nand_re(pkt->data.nand_cycle.control)) {
-        evt.data[evt.count++] = pkt->data.nand_cycle.data;
-
-        evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-        memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
-        ret = packet_get_next(st, pkt);
-    }
-    packet_unget(st, pkt);
 
     evt.hdr.size = sizeof(evt.hdr)
                  + sizeof(evt.addr)
@@ -478,6 +469,50 @@ static int evt_write_nand_change_read_column(struct state *st, struct pkt *pkt) 
 
     evt.count = _htonl(evt.count);
 	st->out_fdh->write((char *)&evt, _ntohl(evt.hdr.size));
+	return 0;
+}
+
+static int evt_write_nand_data(struct state *st, struct pkt *pkt) {
+	struct evt_nand_data evt;
+	int ret;
+
+	evt_fill_header(&evt, pkt->header.sec, pkt->header.nsec,
+					sizeof(evt), EVT_NAND_DATA);
+
+	if (nand_we(pkt->data.nand_cycle.control))
+		evt.direction = 0;
+	if (nand_re(pkt->data.nand_cycle.control))
+		evt.direction = 1;
+
+	memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
+	memcpy(evt.addr, st->addr, sizeof(evt.addr));
+
+	evt.count = 0;
+	ret = 0;
+	while (!ret
+		   && (nand_re(pkt->data.nand_cycle.control) || nand_we(pkt->data.nand_cycle.control))
+		   && !nand_cle(pkt->data.nand_cycle.control)
+		   && !nand_ale(pkt->data.nand_cycle.control)
+		   ) {
+		evt.data[evt.count++] = pkt->data.nand_cycle.data;
+
+		evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
+		memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
+		ret = packet_get_next(st, pkt);
+	}
+	packet_unget(st, pkt);
+
+	evt.hdr.size = sizeof(evt.hdr)
+				 + sizeof(evt.addr)
+				 + sizeof(evt.unknown)
+				 + sizeof(evt.direction)
+				 + sizeof(evt.count)
+				 + evt.count;
+	evt.hdr.size = _htonl(evt.hdr.size);
+	evt.count = _htonl(evt.count);
+
+	st->out_fdh->write((char *)&evt, _ntohl(evt.hdr.size));
+
 	return 0;
 }
 
@@ -525,25 +560,14 @@ static int evt_write_nand_read(struct state *st, struct pkt *pkt) {
     evt.addr[3] = pkts[3].data.nand_cycle.data;
     evt.addr[4] = pkts[4].data.nand_cycle.data;
     evt.addr[5] = pkts[5].data.nand_cycle.data;
+	memcpy(st->addr, evt.addr, sizeof(evt.addr));
 
-    evt.count = 0;
-    evt_fill_end(&evt, pkts[5].header.sec, pkts[5].header.nsec);
-    memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
-    packet_get_next(st, pkt);
-    while (nand_re(pkt->data.nand_cycle.control)) {
-        evt.data[evt.count++] = pkt->data.nand_cycle.data;
-
-        evt_fill_end(&evt, pkt->header.sec, pkt->header.nsec);
-        memcpy(evt.unknown, &pkt->data.nand_cycle.unknown, sizeof(evt.unknown));
-        packet_get_next(st, pkt);
-    }
-    packet_unget(st, pkt);
-
+	evt.count = 0;
     evt.hdr.size = sizeof(evt.hdr)
                  + sizeof(evt.addr)
                  + sizeof(evt.count)
                  + sizeof(evt.unknown)
-                 + evt.count;
+				 + evt.count;
     evt.hdr.size = _htonl(evt.hdr.size);
 
     evt.count = _htonl(evt.count);
@@ -557,11 +581,15 @@ static int evt_write_nand_read(struct state *st, struct pkt *pkt) {
 static int write_nand_cmd(struct state *st, struct pkt *pkt) {
     struct pkt_nand_cycle *nand = &pkt->data.nand_cycle;
 
-    // If it's not a command, we're lost
-    if (!nand_cle(nand->control)) {
-        evt_write_nand_unk(st, pkt);
-        return 0;
+	// If it's not a command, it's either data, or an unknown address.
+	if (!nand_cle(nand->control)) {
+		if (nand_ale(nand->control))
+			evt_write_nand_unk(st, pkt);
+		else
+			evt_write_nand_data(st, pkt);
+		return 0;
     }
+
 
     // "Get ID" command
     if (nand->data == 0x90) {

@@ -32,6 +32,9 @@ struct state {
 
     /* For group-joining, a list of open items */
     struct evt_header *events[128];
+
+	/* The last-known NAND address */
+	uint8_t addr[5];
 };
 
 int packet_get_next(struct state *st, struct pkt *pkt);
