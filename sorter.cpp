@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <QFile>
+#include <QDebug>
 #include "packet-struct.h"
 #include "event-struct.h"
 #include "state.h"
@@ -13,8 +14,6 @@ static const char *EVENT_HDR_2 = "MaDa";
 
 #define SKIP_AMOUNT 80
 #define SEARCH_LIMIT 20
-
-static struct state *g_st;
 
 enum prog_state {
     ST_UNINITIALIZED,
@@ -39,29 +38,27 @@ static int (*st_funcs[])(struct state *st) = {
 	st_write,
 };
 
-static uint32_t hdrs[16777216];
+struct small_hdr {
+    uint32_t sec;
+    uint32_t nsec;
+    int pos;
+};
+
+static struct small_hdr *hdrs;
 static int hdr_count;
 
 
 int compare_event_addrs(const void *a1, const void *a2) {
-	struct state *st = g_st;
-	const uint32_t *o1 = (uint32_t *)a1;
-	const uint32_t *o2 = (uint32_t *)a2;
-	union evt e1, e2;
+    const struct small_hdr *o1 = (struct small_hdr *)a1;
+    const struct small_hdr *o2 = (struct small_hdr *)a2;
 
-	st->fdh->seek(*o1);
-    event_get_next(st, &e1);
-
-	st->fdh->seek(*o2);
-    event_get_next(st, &e2);
-
-    if (e1.header.sec_start < e2.header.sec_start)
+    if (o1->sec < o2->sec)
         return -1;
-    if (e1.header.sec_start > e2.header.sec_start)
+    if (o1->sec > o2->sec)
         return 1;
-    if (e1.header.nsec_start < e2.header.nsec_start)
+    if (o1->nsec < o2->nsec)
         return -1;
-    if (e1.header.nsec_start > e2.header.nsec_start)
+    if (o1->nsec > o2->nsec)
         return 1;
     return 0;
 }
@@ -78,12 +75,15 @@ struct state *sstate_init(void) {
     st->join_buffer_capacity = 0;
     st->buffer_offset = -1;
     st->search_limit = 0;
+    hdrs = NULL;
     return st;
 }
 
 int sstate_free(struct state **st) {
     free(*st);
     *st = NULL;
+    free(hdrs);
+    hdrs = NULL;
     return 0;
 }
 
@@ -116,23 +116,29 @@ static int st_scanning(struct state *st) {
 
     hdr_count = 0;
 	st->fdh->seek(0);
-    do {
-		int s = st->fdh->pos();
+    qDebug() << "Counting headers...\n";
+    while(1) {
+        int s = st->fdh->pos();
         if (s == -1) {
             perror("Couldn't seek");
             return 1;
         }
-        hdrs[hdr_count++] = s;
-    } while ((ret = event_get_next(st, &evt)) == 0);
-    hdr_count--;
-    printf("Working on %d events, last ret was %d...\n", hdr_count, ret);
+        ret = event_get_next(st, &evt);
+        if (ret < 0)
+            break;
+        hdr_count++;
+        hdrs = (struct small_hdr *)realloc(hdrs, hdr_count*sizeof(struct small_hdr));
+        hdrs[hdr_count-1].sec = evt.header.sec_start;
+        hdrs[hdr_count-1].nsec = evt.header.nsec_start;
+        hdrs[hdr_count-1].pos = s;
+    }
+    qDebug() << "Found" << hdr_count << "headers to sort";
 
     sstate_set(st, ST_GROUPING);
     return 0;
 }
 
 static int st_grouping(struct state *st) {
-    g_st = st;
     qsort(hdrs, hdr_count, sizeof(*hdrs), compare_event_addrs);
     sstate_set(st, ST_WRITE);
     return 0;
@@ -152,7 +158,7 @@ static int st_write(struct state *st) {
     struct evt_file_header file_header;
     uint32_t offset;
 
-    printf("Writing out...\n");
+    qDebug() << "Writing out...";
 	st->out_fdh->seek(0);
     offset = 0;
 
@@ -173,7 +179,7 @@ static int st_write(struct state *st) {
         uint32_t offset_swab = _htonl(offset);
 		st->out_fdh->write((char *)&offset_swab, sizeof(offset_swab));
 
-		st->fdh->seek(hdrs[jump_offset]);
+        st->fdh->seek(hdrs[jump_offset].pos);
         memset(&evt, 0, sizeof(evt));
         event_get_next(st, &evt);
         if (evt.header.size > 32768)
@@ -186,7 +192,7 @@ static int st_write(struct state *st) {
     // Now copy over the exact events
     for (jump_offset=0; jump_offset<hdr_count; jump_offset++) {
         union evt evt;
-		st->fdh->seek(hdrs[jump_offset]);
+        st->fdh->seek(hdrs[jump_offset].pos);
         event_get_next(st, &evt);
         event_write(st, &evt);
     }
