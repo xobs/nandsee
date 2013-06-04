@@ -99,8 +99,10 @@ static int evt_write_id(struct state *st, struct pkt *pkt) {
     // Grab the "address" byte.
     packet_get_next(st, pkt);
     if (!nand_ale(pkt->data.nand_cycle.control)
-     || !nand_we(pkt->data.nand_cycle.control))
+     || !nand_we(pkt->data.nand_cycle.control)) {
         fprintf(stderr, "Warning: ALE/WE not set for 'Read ID'\n");
+        nand_print(st, pkt->data.nand_cycle.data, pkt->data.nand_cycle.control);
+    }
     evt.addr = pkt->data.nand_cycle.data;
 
     // Read the actual ID
@@ -582,14 +584,34 @@ static int write_nand_cmd(struct state *st, struct pkt *pkt) {
     struct pkt_nand_cycle *nand = &pkt->data.nand_cycle;
 
 	// If it's not a command, it's either data, or an unknown address.
-	if (!nand_cle(nand->control)) {
-		if (nand_ale(nand->control))
-			evt_write_nand_unk(st, pkt);
-		else
-			evt_write_nand_data(st, pkt);
-		return 0;
+    if (nand_cle(nand->control) && nand_ale(nand->control)) {
+        static int bug_count = 0;
+        bug_count++;
+        if (!(bug_count%1000))
+            qDebug() << "Both CLE and ALE are set!  So far we're up to" << bug_count;
+        return 1;
+    }
+    if (!nand_cle(nand->control) && !nand_ale(nand->control) && !nand_re(nand->control) && !nand_we(nand->control)) {
+        static int bug_count = 0;
+        bug_count++;
+        if (!(bug_count%1000))
+            qDebug() << "Neither CLE nor ALE are set, and not reading or writing!  So far we're up to" << bug_count;
+        return 1;
     }
 
+    static int count = 0;
+    if (++count > 2000)
+        return 0;
+
+    if (!nand_cle(nand->control)) {
+        if (nand_ale(nand->control)) {
+			evt_write_nand_unk(st, pkt);
+        }
+        else {
+			evt_write_nand_data(st, pkt);
+        }
+		return 0;
+    }
 
     // "Get ID" command
     if (nand->data == 0x90) {
@@ -635,6 +657,7 @@ static int write_nand_cmd(struct state *st, struct pkt *pkt) {
         evt_write_nand_cache4(st, pkt);
     }
     else {
+        //qDebug() << "Unknown packet type" << QString::number(nand->data, 16);
         evt_write_nand_unk(st, pkt);
     }
     return 0;
