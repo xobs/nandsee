@@ -29,6 +29,9 @@ int packet_get_next_raw(struct state *st, struct pkt *pkt) {
 	int ret;
     QFile *fd = st->fdh;
 
+    if (fd->atEnd())
+        return -2;
+
 	ret = fd->read((char *) &pkt->header, sizeof(pkt->header));
     if (ret < 0) {
         perror("Unable to read packet header");
@@ -36,15 +39,17 @@ int packet_get_next_raw(struct state *st, struct pkt *pkt) {
     }
 
     if (ret == 0) {
-        perror("End of file while reading header");
-		return -2;
+        return -2;
     }
 
 	pkt->header.sec = _ntohl(pkt->header.sec);
 	pkt->header.nsec = _ntohl(pkt->header.nsec);
 	pkt->header.size = _ntohs(pkt->header.size);
 
-	ret = fd->read((char *)&pkt->data, pkt->header.size-sizeof(pkt->header));
+    if (fd->atEnd())
+        return -2;
+
+    ret = fd->read((char *)&pkt->data, pkt->header.size-sizeof(pkt->header));
     if (ret < 0) {
         perror("Unable to read packet data");
 		return -1;
@@ -96,7 +101,6 @@ int event_get_next(struct state *st, union evt *evt) {
 	}
 
 	if (ret == 0) {
-		perror("End of file for header");
 		return -2;
 	}
 	evt->header.sec_start = _ntohl(evt->header.sec_start);
